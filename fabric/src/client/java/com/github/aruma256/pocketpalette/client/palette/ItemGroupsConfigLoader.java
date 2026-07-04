@@ -46,8 +46,9 @@ public class ItemGroupsConfigLoader {
      * when in a world, otherwise falls back to built-in registries.
      */
     private static RegistryAccess getRegistryAccess() {
+        // Minecraft.getInstance() is null in unit tests (no client running)
         Minecraft mc = Minecraft.getInstance();
-        if (mc.level != null) {
+        if (mc != null && mc.level != null) {
             return mc.level.registryAccess();
         }
         // Fallback for when not in a world (limited - won't have enchantments etc.)
@@ -178,7 +179,11 @@ public class ItemGroupsConfigLoader {
         }
 
         String itemIdStr = itemObj.get("id").getAsString();
-        ResourceLocation resourceLocation = ResourceLocation.parse(itemIdStr);
+        ResourceLocation resourceLocation = ResourceLocation.tryParse(itemIdStr);
+        if (resourceLocation == null) {
+            warnings.add(String.format("'%s' is not a valid item. (%s)", itemIdStr, location));
+            return null;
+        }
         Optional<Holder.Reference<Item>> itemHolder = BuiltInRegistries.ITEM.get(resourceLocation);
 
         if (itemHolder.isEmpty()) {

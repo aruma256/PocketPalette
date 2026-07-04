@@ -1,5 +1,7 @@
 package com.github.aruma256.pocketpalette.client.keybinding;
 
+import java.util.function.IntFunction;
+
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -30,14 +32,18 @@ public final class InventorySwapper {
 	 */
 	public static int findSlotWithItem(Player player, ItemStack target) {
 		Inventory inventory = player.getInventory();
-		int selectedSlot = inventory.getSelectedSlot();
+		return findMatchingSlot(inventory::getItem, inventory.getSelectedSlot(), target);
+	}
 
+	// Visible for testing: same contract as findSlotWithItem, but reads slots
+	// through a function so no Player/Inventory instance is required
+	static int findMatchingSlot(IntFunction<ItemStack> slotGetter, int selectedSlot, ItemStack target) {
 		// Stage 1: exact match (item + components)
 		for (int i = 0; i < Inventory.INVENTORY_SIZE; i++) {
 			if (i == selectedSlot) {
 				continue;
 			}
-			if (ItemStack.isSameItemSameComponents(inventory.getItem(i), target)) {
+			if (ItemStack.isSameItemSameComponents(slotGetter.apply(i), target)) {
 				return i;
 			}
 		}
@@ -49,7 +55,7 @@ public final class InventorySwapper {
 				if (i == selectedSlot) {
 					continue;
 				}
-				ItemStack stack = inventory.getItem(i);
+				ItemStack stack = slotGetter.apply(i);
 				if (!stack.isEmpty() && stack.is(target.getItem())) {
 					return i;
 				}
@@ -88,7 +94,7 @@ public final class InventorySwapper {
 	 * Convert an Inventory index (0-8 hotbar, 9-35 main) to the corresponding
 	 * InventoryMenu slot index (36-44 hotbar, 9-35 main).
 	 */
-	private static int inventorySlotToMenuSlot(int inventorySlot) {
+	static int inventorySlotToMenuSlot(int inventorySlot) {
 		if (inventorySlot < Inventory.getSelectionSize()) {
 			return InventoryMenu.USE_ROW_SLOT_START + inventorySlot;
 		}
