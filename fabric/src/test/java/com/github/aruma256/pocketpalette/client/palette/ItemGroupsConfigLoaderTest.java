@@ -14,6 +14,8 @@ import java.util.List;
 
 import com.github.aruma256.pocketpalette.MinecraftBootstrapExtension;
 
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -315,6 +317,178 @@ public class ItemGroupsConfigLoaderTest {
         assertEquals(2, defaults.size());
         assertTrue(defaults.get(0).isEmpty());
         assertTrue(defaults.get(1).isEmpty());
+    }
+
+    // --- Robustness against broken config files ---
+
+    @Test
+    public void testLoad_warnsOnMalformedJson() throws IOException {
+        writeConfigFile("{ this is not valid json !!");
+
+        ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
+
+        assertFalse(result.getWarnings().isEmpty());
+        assertTrue(result.getGroups().isEmpty());
+    }
+
+    @Test
+    public void testLoad_warnsOnConfigVersionMismatch() throws IOException {
+        String json = """
+            {
+              "config_version": 999,
+              "groups": []
+            }
+            """;
+        writeConfigFile(json);
+
+        ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
+
+        assertTrue(result.getWarnings().stream().anyMatch(w -> w.contains("version")));
+    }
+
+    @Test
+    public void testLoad_warnsOnMissingConfigVersion() throws IOException {
+        writeConfigFile("{\"groups\": []}");
+
+        ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
+
+        assertTrue(result.getWarnings().stream().anyMatch(w -> w.contains("version")));
+    }
+
+    @Test
+    public void testLoad_warnsOnMissingGroups() throws IOException {
+        writeConfigFile("{\"config_version\": 1}");
+
+        ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
+
+        assertTrue(result.getWarnings().stream().anyMatch(w -> w.contains("groups")));
+        assertTrue(result.getGroups().isEmpty());
+    }
+
+    @Test
+    public void testLoad_parsesEmptyGroupsArray() throws IOException {
+        String json = """
+            {
+              "config_version": 1,
+              "groups": []
+            }
+            """;
+        writeConfigFile(json);
+
+        ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
+
+        assertTrue(result.getWarnings().isEmpty(), "Warnings: " + result.getWarnings());
+        assertTrue(result.getGroups().isEmpty());
+    }
+
+    @Test
+    public void testLoad_warnsOnMalformedItemId_withoutAbortingLoad() throws IOException {
+        // "NOT a valid id" is not parseable as a ResourceLocation; it must be
+        // reported per-item, and the rest of the config must still load
+        String json = """
+            {
+              "config_version": 1,
+              "groups": [
+                [
+                  [{"id": "NOT a valid id"}, {"id": "minecraft:stone"}, {"id": "minecraft:granite"}]
+                ]
+              ]
+            }
+            """;
+        writeConfigFile(json);
+
+        ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
+
+        assertTrue(result.getWarnings().stream().anyMatch(w -> w.contains("NOT a valid id")));
+        assertEquals(1, result.getGroups().size());
+        assertEquals(1, result.getGroups().get(0).size());
+        assertEquals(2, result.getGroups().get(0).get(0).size());
+    }
+
+    // --- Component-aware entries ---
+
+    @Test
+    public void testLoad_parsesComponents() throws IOException {
+        String json = """
+            {
+              "config_version": 1,
+              "groups": [
+                [
+                  [
+                    {"id": "minecraft:stone", "components": "{\\"minecraft:custom_name\\":\\"Special Stone\\"}"},
+                    {"id": "minecraft:granite"}
+                  ]
+                ]
+              ]
+            }
+            """;
+        writeConfigFile(json);
+
+        ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
+
+        assertTrue(result.getWarnings().isEmpty(), "Warnings: " + result.getWarnings());
+        ItemState loaded = result.getGroups().get(0).get(0).get(0);
+        assertTrue(loaded.hasComponents());
+        assertEquals(Component.literal("Special Stone"),
+                loaded.toItemStack().get(DataComponents.CUSTOM_NAME));
+    }
+
+    @Test
+    public void testLoad_warnsOnUnparseableComponents_keepsPlainItem() throws IOException {
+        String json = """
+            {
+              "config_version": 1,
+              "groups": [
+                [
+                  [
+                    {"id": "minecraft:stone", "components": "not-snbt-at-all{{{"},
+                    {"id": "minecraft:granite"}
+                  ]
+                ]
+              ]
+            }
+            """;
+        writeConfigFile(json);
+
+        ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
+
+        assertTrue(result.getWarnings().stream()
+                .anyMatch(w -> w.contains("components") || w.contains("Failed to parse")));
+        // The item itself is kept (without components), so the cycle stays valid
+        assertEquals(2, result.getGroups().get(0).get(0).size());
+        assertFalse(result.getGroups().get(0).get(0).get(0).hasComponents());
+    }
+
+    @Test
+    public void testSaveAndLoad_roundTripWithComponents() throws IOException {
+        ItemStack namedStone = new ItemStack(Items.STONE);
+        namedStone.set(DataComponents.CUSTOM_NAME, Component.literal("Special Stone"));
+
+        List<List<List<ItemState>>> groups = new ArrayList<>();
+        List<List<ItemState>> group0 = new ArrayList<>();
+        List<ItemState> cycle = new ArrayList<>();
+        cycle.add(new ItemState(namedStone));
+        cycle.add(new ItemState(new ItemStack(Items.GRANITE)));
+        group0.add(cycle);
+        groups.add(group0);
+
+        ItemGroupsConfigLoader.save(tempDir, groups);
+        ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
+
+        assertTrue(result.getWarnings().isEmpty(), "Warnings: " + result.getWarnings());
+        ItemState loaded = result.getGroups().get(0).get(0).get(0);
+        assertEquals(new ItemState(namedStone), loaded);
+        assertEquals(Component.literal("Special Stone"),
+                loaded.toItemStack().get(DataComponents.CUSTOM_NAME));
+    }
+
+    @Test
+    public void testSave_createsMissingDirectory() {
+        File nestedDir = new File(tempDir, "nested/config");
+
+        ItemGroupsConfigLoader.save(nestedDir, ItemGroupsConfigLoader.createDefaultGroups());
+
+        assertTrue(ItemGroupsConfigLoader.configExists(nestedDir));
     }
 
     private void writeConfigFile(String content) throws IOException {

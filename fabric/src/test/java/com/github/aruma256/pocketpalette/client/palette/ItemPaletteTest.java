@@ -276,6 +276,111 @@ public class ItemPaletteTest {
         assertEquals(Items.GRANITE, result.get(1).getItem());
     }
 
+    @Test
+    public void testGetAllCycleItems_returnsNullForInvalidGroupIndex() {
+        loadSimpleCycle(0);
+        assertNull(ItemPalette.getAllCycleItems(new ItemStack(Items.STONE), 1));
+        assertNull(ItemPalette.getAllCycleItems(new ItemStack(Items.STONE), -1));
+    }
+
+    @Test
+    public void testGetAllCycleItems_preservesOriginalStackOnFallback() {
+        // Register plain stone; query with a named stone (fallback match).
+        // The first element must be the original stack, keeping its components,
+        // so the currently held item is displayed as-is.
+        loadSimpleCycle(0);
+
+        ItemStack namedStone = new ItemStack(Items.STONE);
+        namedStone.set(DataComponents.CUSTOM_NAME, Component.literal("Special Stone"));
+
+        List<ItemStack> result = ItemPalette.getAllCycleItems(namedStone, 0);
+
+        assertNotNull(result);
+        assertEquals(Component.literal("Special Stone"),
+                result.get(0).get(DataComponents.CUSTOM_NAME));
+        assertNull(result.get(1).get(DataComponents.CUSTOM_NAME));
+    }
+
+    @Test
+    public void testLoadGroups_skipsCyclesWithLessThan2Items() {
+        List<ItemState> tooShort = List.of(new ItemState(new ItemStack(Items.STONE)));
+        loadCycle(0, tooShort);
+
+        assertFalse(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
+    }
+
+    @Test
+    public void testLoadGroups_firstCycleWinsOnDuplicateItem() {
+        // STONE appears in both cycles; the first registration must win
+        List<ItemState> cycleA = Arrays.asList(
+                new ItemState(new ItemStack(Items.STONE)),
+                new ItemState(new ItemStack(Items.GRANITE))
+        );
+        List<ItemState> cycleB = Arrays.asList(
+                new ItemState(new ItemStack(Items.STONE)),
+                new ItemState(new ItemStack(Items.DIORITE))
+        );
+        List<List<List<ItemState>>> groups = new ArrayList<>();
+        groups.add(Arrays.asList(cycleA, cycleB));
+        ItemPalette.loadGroups(groups);
+
+        List<ItemStack> result = ItemPalette.getAllCycleItems(new ItemStack(Items.STONE), 0);
+
+        assertNotNull(result);
+        assertEquals(Items.GRANITE, result.get(1).getItem());
+        // DIORITE (only in cycleB) must still resolve to cycleB
+        List<ItemStack> dioriteResult = ItemPalette.getAllCycleItems(new ItemStack(Items.DIORITE), 0);
+        assertNotNull(dioriteResult);
+        assertEquals(Items.STONE, dioriteResult.get(1).getItem());
+    }
+
+    @Test
+    public void testClearGroup_clearsOnlyTargetGroup() {
+        List<ItemState> cycle0 = Arrays.asList(
+                new ItemState(new ItemStack(Items.STONE)),
+                new ItemState(new ItemStack(Items.GRANITE))
+        );
+        List<ItemState> cycle1 = Arrays.asList(
+                new ItemState(new ItemStack(Items.OAK_PLANKS)),
+                new ItemState(new ItemStack(Items.SPRUCE_PLANKS))
+        );
+        List<List<List<ItemState>>> groups = new ArrayList<>();
+        groups.add(new ArrayList<>(List.of(cycle0)));
+        groups.add(new ArrayList<>(List.of(cycle1)));
+        ItemPalette.loadGroups(groups);
+
+        ItemPalette.clearGroup(0);
+
+        assertFalse(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
+        assertTrue(ItemPalette.canCycle(new ItemStack(Items.OAK_PLANKS), 1));
+        // Raw data used for saving must be cleared as well
+        assertTrue(ItemPalette.getGroupData().get(0).isEmpty());
+        assertFalse(ItemPalette.getGroupData().get(1).isEmpty());
+    }
+
+    @Test
+    public void testClearGroup_ignoresInvalidIndex() {
+        loadSimpleCycle(0);
+        assertDoesNotThrow(() -> ItemPalette.clearGroup(-1));
+        assertDoesNotThrow(() -> ItemPalette.clearGroup(99));
+        assertTrue(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
+    }
+
+    @Test
+    public void testGetGroupData_returnsLoadedData() {
+        List<ItemState> cycle = Arrays.asList(
+                new ItemState(new ItemStack(Items.STONE)),
+                new ItemState(new ItemStack(Items.GRANITE))
+        );
+        loadCycle(0, cycle);
+
+        List<List<List<ItemState>>> data = ItemPalette.getGroupData();
+
+        assertEquals(1, data.size());
+        assertEquals(1, data.get(0).size());
+        assertEquals(cycle, data.get(0).get(0));
+    }
+
     // --- Helper methods ---
 
     private void loadSimpleCycle(int groupIndex) {

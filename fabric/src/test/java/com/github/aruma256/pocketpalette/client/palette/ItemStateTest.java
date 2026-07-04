@@ -166,6 +166,36 @@ public class ItemStateTest {
     }
 
     @Test
+    public void testNotEqualsWithNullAndOtherType() {
+        ItemState state = new ItemState(new ItemStack(Items.STONE));
+        assertNotEquals(state, null);
+        assertNotEquals(state, new ItemStack(Items.STONE));
+    }
+
+    @Test
+    public void testEqualsIsReflexive() {
+        ItemState state = new ItemState(new ItemStack(Items.STONE));
+        assertEquals(state, state);
+    }
+
+    @Test
+    public void testWithoutComponentsOnPlainItemIsEqual() {
+        ItemState state = new ItemState(new ItemStack(Items.STONE));
+        assertEquals(state, state.withoutComponents());
+    }
+
+    @Test
+    public void testToItemStackPreservesComponents() {
+        ItemStack namedStack = new ItemStack(Items.DIAMOND_SWORD);
+        namedStack.set(DataComponents.CUSTOM_NAME, Component.literal("Fire Sword"));
+
+        ItemState state = new ItemState(namedStack);
+
+        assertEquals(Component.literal("Fire Sword"),
+                state.toItemStack().get(DataComponents.CUSTOM_NAME));
+    }
+
+    @Test
     public void testHasComponentsReturnsFalseForPlainItem() {
         ItemState state = new ItemState(new ItemStack(Items.STONE));
         assertFalse(state.hasComponents());
