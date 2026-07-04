@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"id": "pocketpalette",
+	"version": "${version}",
+	"name": "PocketPalette",
+	"description": "Cycle through related items in your hotbar, even in Survival mode. A palette for builders, powered by inventory swaps.",
+	"authors": [
+		"Aruma256"
+	],
+	"contact": {
+		"sources": "https://github.com/aruma256/PocketPalette"
+	},
+	"license": "GPL-3.0-or-later",
+	"icon": "assets/pocketpalette/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.github.aruma256.pocketpalette.client.PocketPaletteClient"
+		]
+	},
+	"mixins": [
+		{
+			"config": "pocketpalette.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.8",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

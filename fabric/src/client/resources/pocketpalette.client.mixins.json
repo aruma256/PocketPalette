@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"package": "com.github.aruma256.pocketpalette.client.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"MouseScrollRedirector",
+		"HotbarRendererHook"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
