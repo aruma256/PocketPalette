@@ -1,14 +1,14 @@
 # PocketPalette
 
-A **client-side only** Fabric mod that lets builders cycle through related items in the hotbar — **even in Survival mode**.
+A **client-side only** Fabric mod that lets builders cycle through related items in the hotbar — **even in Survival mode**. No server-side installation required — works on vanilla servers.
 
-Hold the Palette key (default: <kbd>R</kbd>) and scroll to swap the selected hotbar item with related items from your inventory (e.g. stone → granite → diorite → andesite). Since Survival mode doesn't allow creating items, PocketPalette works by **swapping items within your inventory** — only items you actually have are offered.
+Hold the Palette key (default: <kbd>R</kbd>) and scroll to swap the selected hotbar item for a related item (e.g. stone → granite → diorite → andesite). Only items you actually have in your inventory will show up as options.
 
 This mod is a Survival-focused spin-off of the Palette feature from [LotTweaks](https://github.com/aruma256/LotTweaks).
 
 ## Features
 
-- **Item Palette in Survival**: hold <kbd>R</kbd> + scroll to cycle the selected hotbar slot through item groups, using inventory swaps (no server-side installation required — works on vanilla servers)
+- **Item Palette in Survival**: hold <kbd>R</kbd> + scroll to cycle the selected hotbar slot through item groups
 - **Component-aware groups**: enchanted / renamed items can be registered as distinct entries
 - **JSON config**: `config/PocketPalette-ItemGroups.json` (same format as LotTweaks)
 - **In-game group registration**: line up items on your hotbar and run `/pocketpalette add 1` (or `add 2`)

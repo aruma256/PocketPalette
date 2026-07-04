@@ -3,7 +3,7 @@
 	"id": "pocketpalette",
 	"version": "${version}",
 	"name": "PocketPalette",
-	"description": "Cycle through related items in your hotbar, even in Survival mode. A palette for builders, powered by inventory swaps.",
+	"description": "Cycle through related items in your hotbar, even in Survival mode.",
 	"authors": [
 		"Aruma256"
 	],
