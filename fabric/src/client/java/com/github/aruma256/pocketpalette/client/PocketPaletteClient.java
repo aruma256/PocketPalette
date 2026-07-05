@@ -7,6 +7,7 @@ import com.github.aruma256.pocketpalette.client.event.RenderHotbarEvent;
 import com.github.aruma256.pocketpalette.client.event.RenderHotbarEvent.RenderHotbarListener;
 import com.github.aruma256.pocketpalette.client.event.ScrollEvent;
 import com.github.aruma256.pocketpalette.client.event.ScrollEvent.ScrollListener;
+import com.github.aruma256.pocketpalette.client.gui.PaletteEditorOpener;
 import com.github.aruma256.pocketpalette.client.keybinding.PaletteKey;
 import com.github.aruma256.pocketpalette.client.palette.PaletteConfigManager;
 
@@ -29,8 +30,10 @@ public class PocketPaletteClient implements ClientModInitializer, ClientPlayConn
 
 	public static final String KEY_CATEGORY = "key.category.pocketpalette";
 
+	private static final PaletteKey PALETTE_KEY = new PaletteKey(GLFW.GLFW_KEY_R, KEY_CATEGORY);
+
 	private static final KeyMapping[] KEY_MAPPINGS = {
-			new PaletteKey(GLFW.GLFW_KEY_R, KEY_CATEGORY)
+			PALETTE_KEY
 	};
 
 	@Override
@@ -40,6 +43,8 @@ public class PocketPaletteClient implements ClientModInitializer, ClientPlayConn
 		for (KeyMapping key : KEY_MAPPINGS) {
 			registerKey(key);
 		}
+		//
+		PaletteEditorOpener.register(PALETTE_KEY);
 		//
 		ClientPlayConnectionEvents.JOIN.register(this);
 		//

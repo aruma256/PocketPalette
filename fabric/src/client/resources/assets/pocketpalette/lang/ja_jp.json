@@ -1,0 +1,11 @@
+{
+  "key.category.pocketpalette": "PocketPalette",
+  "key.pocketpalette.palette": "パレット",
+  "pocketpalette.editor.title": "パレットエディタ",
+  "pocketpalette.editor.group": "グループ %s",
+  "pocketpalette.editor.new_cycle": "新規サイクル",
+  "pocketpalette.editor.inventory_hint": "下のアイテムをクリックで追加",
+  "pocketpalette.editor.duplicate_in_cycle": "このサイクルに登録済みです",
+  "pocketpalette.editor.duplicate_in_group": "このグループの別のサイクルで使用されています",
+  "pocketpalette.editor.cycle_removed": "PocketPalette: アイテムが2個未満のサイクルを削除しました"
+}

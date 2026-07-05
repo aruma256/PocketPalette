@@ -48,7 +48,10 @@ Tests use JUnit Jupiter with Minecraft Bootstrap for game environment initializa
   - `PocketPalette.java` - MODID / LOGGER / CONFIG constants. **No server entry point** (client-only mod)
 - `src/client/` - All mod logic (package: `com.github.aruma256.pocketpalette.client`)
   - `PocketPaletteClient.java` - Client entry point (`ClientModInitializer`), keybinding registration, config reload on world join
-  - `PocketPaletteCommand.java` - `/pocketpalette add 1|2` (register hotbar as a new cycle), `/pocketpalette reload`
+  - `PocketPaletteCommand.java` - `/pocketpalette reload`
+  - `gui/` - In-game palette editor
+    - `PaletteEditorOpener.java` - Opens the editor when the palette key is pressed while hovering an item in a container screen (REI/JEI-style hover + key)
+    - `PaletteEditScreen.java` - Editor screen: cycle list (reorder ↑↓ / delete ✕, group 1/2 toggle) on top, player inventory below (click = append base item). Auto-saves on close; cycles with <2 items are discarded
   - `keybinding/` - Key handling
     - `KeyBase.java` - Base class with press/release/double-tap detection
     - `PaletteKey.java` - R key: hold + scroll to cycle items; candidates are filtered to items present in the inventory
@@ -58,9 +61,10 @@ Tests use JUnit Jupiter with Minecraft Bootstrap for game environment initializa
     - `ItemState.java` - Component-aware ItemStack wrapper (HashMap key compatible)
     - `ItemGroupsConfigLoader.java` - JSON config read/write (`config/PocketPalette-ItemGroups.json`)
     - `PaletteConfigManager.java` - Config lifecycle management
+    - `PaletteEditModel.java` - GUI-independent editing session for the palette editor (cycle resolution, add/reorder/remove, commit rules)
     - `ItemValidation.java` - Item/stack validity checks
   - `event/` - Custom event system (`ScrollEvent`, `RenderHotbarEvent`)
-  - `mixin/` - `MouseScrollRedirector` (intercept scroll), `HotbarRendererHook` (candidate ring rendering hook)
+  - `mixin/` - `MouseScrollRedirector` (intercept scroll), `HotbarRendererHook` (candidate ring rendering hook), `AbstractContainerScreenAccessor` (expose `hoveredSlot` for the editor opener)
   - `render/` - `ItemStackRenderer` (circular candidate display above hotbar)
 - `src/test/` - JUnit tests for the palette package
 

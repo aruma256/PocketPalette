@@ -65,22 +65,13 @@ public class PaletteConfigManager {
         ItemGroupsConfigLoader.save(configDir, groupData);
     }
 
-    public static boolean tryToAddItemGroup(List<ItemState> newCycle, int groupIndex) {
-        List<List<List<ItemState>>> groupData = ItemPalette.getGroupData();
-
-        // Ensure we have enough groups
-        while (groupData.size() <= groupIndex) {
-            groupData.add(new ArrayList<>());
-        }
-
-        // Add the new cycle
-        groupData.get(groupIndex).add(newCycle);
-
-        // Reload to validate
-        ItemPalette.loadGroups(groupData);
-
-        // Save to file
+    /**
+     * Rebuild the palette caches from the (mutated) group data and persist it.
+     * Used by the palette editor after committing an edit session.
+     */
+    public static void applyGroupDataAndSave() {
+        ItemPalette.loadGroups(ItemPalette.getGroupData());
         saveAllToFile();
-        return true;
     }
+
 }

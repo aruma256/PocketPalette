@@ -95,31 +95,22 @@ public class PaletteConfigManagerTest {
     }
 
     @Test
-    public void testTryToAddItemGroup_registersAndPersistsCycle() {
+    public void testApplyGroupDataAndSave_registersAndPersistsCycle() {
         List<ItemState> newCycle = new ArrayList<>();
         newCycle.add(new ItemState(new ItemStack(Items.STONE)));
         newCycle.add(new ItemState(new ItemStack(Items.GRANITE)));
 
-        boolean ok = PaletteConfigManager.tryToAddItemGroup(newCycle, 0);
+        // Mutate the live group data the way the palette editor does
+        List<List<List<ItemState>>> groupData = ItemPalette.getGroupData();
+        groupData.add(new ArrayList<>());
+        groupData.get(0).add(newCycle);
 
-        assertTrue(ok);
+        PaletteConfigManager.applyGroupDataAndSave();
+
         // Palette is updated in memory
         assertTrue(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
         // ... and persisted to disk
         ItemGroupsConfigLoader.LoadResult saved = ItemGroupsConfigLoader.load(tempDir);
         assertEquals(1, saved.getGroups().get(0).size());
-    }
-
-    @Test
-    public void testTryToAddItemGroup_padsMissingGroups() {
-        List<ItemState> newCycle = new ArrayList<>();
-        newCycle.add(new ItemState(new ItemStack(Items.STONE)));
-        newCycle.add(new ItemState(new ItemStack(Items.GRANITE)));
-
-        PaletteConfigManager.tryToAddItemGroup(newCycle, 1);
-
-        assertEquals(2, ItemPalette.getGroupCount());
-        assertFalse(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
-        assertTrue(ItemPalette.canCycle(new ItemStack(Items.STONE), 1));
     }
 }
