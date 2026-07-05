@@ -30,6 +30,7 @@ import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceLocation;
@@ -39,6 +40,8 @@ import net.minecraft.world.item.ItemStack;
 public class ItemGroupsConfigLoader {
 
     public static final String CONFIG_FILE_NAME = "PocketPalette-ItemGroups.json";
+
+    private static final int CURRENT_CONFIG_VERSION = 1;
 
     /**
      * Get the appropriate RegistryAccess for codec operations.
@@ -54,7 +57,14 @@ public class ItemGroupsConfigLoader {
         // Fallback for when not in a world (limited - won't have enchantments etc.)
         return RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
     }
-    private static final int CURRENT_CONFIG_VERSION = 1;
+
+    /**
+     * Create RegistryOps backed by the client's registry access, so that
+     * data-driven registries (e.g. enchantments) resolve when available.
+     */
+    private static RegistryOps<JsonElement> createRegistryOps() {
+        return RegistryOps.create(JsonOps.INSTANCE, getRegistryAccess());
+    }
 
     public static class LoadResult {
         private final List<List<List<ItemState>>> groups;
@@ -203,11 +213,8 @@ public class ItemGroupsConfigLoader {
             String componentsStr = itemObj.get("components").getAsString();
             try {
                 CompoundTag nbt = TagParser.parseCompoundFully(componentsStr);
-                // Use client's registry access for data-driven registries (e.g., enchantments)
-                RegistryAccess registryAccess = getRegistryAccess();
-                RegistryOps<com.google.gson.JsonElement> registryOps = RegistryOps.create(JsonOps.INSTANCE, registryAccess);
-                com.google.gson.JsonElement json = NbtOps.INSTANCE.convertTo(JsonOps.INSTANCE, nbt);
-                DataComponentPatch patch = DataComponentPatch.CODEC.parse(registryOps, json).getOrThrow();
+                JsonElement json = NbtOps.INSTANCE.convertTo(JsonOps.INSTANCE, nbt);
+                DataComponentPatch patch = DataComponentPatch.CODEC.parse(createRegistryOps(), json).getOrThrow();
                 itemStack.applyComponents(patch);
             } catch (Exception e) {
                 warnings.add(String.format("Failed to parse components for '%s': %s (%s)",
@@ -279,12 +286,10 @@ public class ItemGroupsConfigLoader {
         if (itemState.hasComponents()) {
             try {
                 DataComponentPatch patch = stack.getComponentsPatch();
-                // Use client's registry access to include data-driven registries (e.g., enchantments)
-                RegistryOps<com.google.gson.JsonElement> registryOps = RegistryOps.create(JsonOps.INSTANCE, getRegistryAccess());
-                com.google.gson.JsonElement encoded = DataComponentPatch.CODEC.encodeStart(registryOps, patch).getOrThrow();
+                JsonElement encoded = DataComponentPatch.CODEC.encodeStart(createRegistryOps(), patch).getOrThrow();
 
                 // Convert JSON to SNBT-like string
-                net.minecraft.nbt.Tag nbt = JsonOps.INSTANCE.convertTo(NbtOps.INSTANCE, encoded);
+                Tag nbt = JsonOps.INSTANCE.convertTo(NbtOps.INSTANCE, encoded);
                 obj.addProperty("components", nbt.toString());
             } catch (Exception e) {
                 PocketPalette.LOGGER.warn("Failed to serialize components for {}", id, e);

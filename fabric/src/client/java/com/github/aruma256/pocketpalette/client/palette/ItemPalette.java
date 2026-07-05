@@ -21,25 +21,28 @@ public class ItemPalette {
         return GROUP_CACHES.size();
     }
 
-    public static boolean canCycle(ItemStack itemStack, int groupIndex) {
+    /**
+     * Get the lookup cache for the given group, or null if the stack is
+     * invalid or the group index is out of range.
+     */
+    private static Map<ItemState, List<ItemState>> getCache(ItemStack itemStack, int groupIndex) {
         if (!ItemValidation.isValidStack(itemStack)) {
-            return false;
+            return null;
         }
         if (groupIndex < 0 || groupIndex >= GROUP_CACHES.size()) {
+            return null;
+        }
+        return GROUP_CACHES.get(groupIndex);
+    }
+
+    public static boolean canCycle(ItemStack itemStack, int groupIndex) {
+        Map<ItemState, List<ItemState>> cache = getCache(itemStack, groupIndex);
+        if (cache == null) {
             return false;
         }
-
-        Map<ItemState, List<ItemState>> cache = GROUP_CACHES.get(groupIndex);
         ItemState key = new ItemState(itemStack);
-
-        // Try exact match first
-        if (cache.containsKey(key)) {
-            return true;
-        }
-
-        // Try fallback without components
-        ItemState fallbackKey = key.withoutComponents();
-        return cache.containsKey(fallbackKey);
+        // Try exact match first, then fallback without components
+        return cache.containsKey(key) || cache.containsKey(key.withoutComponents());
     }
 
     /**
@@ -48,27 +51,16 @@ public class ItemPalette {
      * Use this for duplicate detection when adding new items.
      */
     public static boolean containsExactItem(ItemStack itemStack, int groupIndex) {
-        if (!ItemValidation.isValidStack(itemStack)) {
-            return false;
-        }
-        if (groupIndex < 0 || groupIndex >= GROUP_CACHES.size()) {
-            return false;
-        }
-
-        Map<ItemState, List<ItemState>> cache = GROUP_CACHES.get(groupIndex);
-        ItemState key = new ItemState(itemStack);
-        return cache.containsKey(key);
+        Map<ItemState, List<ItemState>> cache = getCache(itemStack, groupIndex);
+        return cache != null && cache.containsKey(new ItemState(itemStack));
     }
 
     public static List<ItemStack> getAllCycleItems(ItemStack itemStack, int groupIndex) {
-        if (!ItemValidation.isValidStack(itemStack)) {
-            return null;
-        }
-        if (groupIndex < 0 || groupIndex >= GROUP_CACHES.size()) {
+        Map<ItemState, List<ItemState>> cache = getCache(itemStack, groupIndex);
+        if (cache == null) {
             return null;
         }
 
-        Map<ItemState, List<ItemState>> cache = GROUP_CACHES.get(groupIndex);
         ItemState key = new ItemState(itemStack);
 
         // Stage 1: Try exact match (with components)
@@ -91,19 +83,8 @@ public class ItemPalette {
     private static List<ItemStack> buildCycleListFromState(List<ItemState> cycle, ItemState startKey, ItemStack originalStack) {
         List<ItemStack> result = new ArrayList<>();
 
-        // Find the starting index
-        int startIndex = -1;
-        for (int i = 0; i < cycle.size(); i++) {
-            if (cycle.get(i).equals(startKey)) {
-                startIndex = i;
-                break;
-            }
-        }
-
-        if (startIndex == -1) {
-            // Key not found in cycle, shouldn't happen but handle gracefully
-            startIndex = 0;
-        }
+        // Key not found in cycle shouldn't happen, but handle gracefully (start at 0)
+        int startIndex = Math.max(0, cycle.indexOf(startKey));
 
         // Add the original stack first (preserving its components if any)
         result.add(originalStack);

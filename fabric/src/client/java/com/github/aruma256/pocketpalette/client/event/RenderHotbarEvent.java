@@ -41,8 +41,8 @@ public class RenderHotbarEvent {
 		return Minecraft.getInstance().getWindow();
 	}
 
-	public static interface RenderHotbarListener {
-		public void onRenderHotbar(RenderHotbarEvent event);
+	public interface RenderHotbarListener {
+		void onRenderHotbar(RenderHotbarEvent event);
 	}
 
 }

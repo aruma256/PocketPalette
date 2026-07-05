@@ -45,8 +45,4 @@ public class KeyBase extends KeyMapping implements ClientTickEvents.EndTick {
 
 	protected void onKeyReleased() {
 	}
-
-	protected static float getPartialTick() {
-		return Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true);
-	}
 }

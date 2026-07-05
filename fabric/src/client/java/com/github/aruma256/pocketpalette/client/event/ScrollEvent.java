@@ -39,8 +39,8 @@ public class ScrollEvent {
 		return scrollAmount;
 	}
 
-	public static interface ScrollListener {
-		public void onScroll(ScrollEvent event);
+	public interface ScrollListener {
+		void onScroll(ScrollEvent event);
 	}
 
 }

@@ -31,21 +31,11 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 	}
 
 	private void updatePhase() {
-		int maxGroups = ItemPalette.getGroupCount();
-		if (maxGroups <= 2) {
-			// Original behavior for 0-2 groups
-			if (this.doubleTapTick == 0) {
-				phase = 0;
-			} else {
-				phase ^= 1;
-			}
+		if (this.doubleTapTick == 0) {
+			phase = 0;
 		} else {
-			// Cycle through all groups
-			if (this.doubleTapTick == 0) {
-				phase = 0;
-			} else {
-				phase = (phase + 1) % maxGroups;
-			}
+			// Double-tap cycles through all groups (toggle 0/1 when 2 or fewer)
+			phase = (phase + 1) % Math.max(2, ItemPalette.getGroupCount());
 		}
 	}
 

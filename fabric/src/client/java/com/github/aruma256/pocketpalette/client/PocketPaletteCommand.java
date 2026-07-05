@@ -23,15 +23,17 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 @Environment(EnvType.CLIENT)
 public class PocketPaletteCommand implements ClientCommandRegistrationCallback {
 
 	private static void displayMessage(Component textComponent) {
 		Minecraft.getInstance().getChatListener().handleSystemMessage(textComponent, false);
+	}
+
+	private static void displayError(String message) {
+		displayMessage(Component.literal(ChatFormatting.RED + "PocketPalette: " + message));
 	}
 
 	@Override
@@ -54,65 +56,50 @@ public class PocketPaletteCommand implements ClientCommandRegistrationCallback {
 		return ClientCommandManager.literal(string);
 	}
 
-	private void executeAdd(int groupIndex) throws PocketPaletteCommandRuntimeException {
+	private void executeAdd(int groupIndex) {
 		Minecraft mc = Minecraft.getInstance();
 		List<ItemState> cycle = new ArrayList<>();
-		int count = 0;
 		for (int i = 0; i < Inventory.getSelectionSize(); i++) {
 			ItemStack itemStack = mc.player.getInventory().getItem(i);
 			if (itemStack.isEmpty()) {
 				break;
 			}
-			Item item = itemStack.getItem();
-			if (item == Items.AIR) {
-				throw new PocketPaletteCommandRuntimeException(String.format("Failed to get item instance. (%d)", i + 1));
-			}
-
-			ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
-			String name = id.toString();
 
 			if (ItemPalette.containsExactItem(itemStack, groupIndex)) {
-				throw new PocketPaletteCommandRuntimeException(String.format("'%s' already exists (slot %d)", name, i + 1));
+				ResourceLocation id = BuiltInRegistries.ITEM.getKey(itemStack.getItem());
+				displayError(String.format("'%s' already exists (slot %d)", id, i + 1));
+				return;
 			}
 
 			cycle.add(new ItemState(itemStack));
-			count++;
 		}
 
 		if (cycle.isEmpty()) {
-			throw new PocketPaletteCommandRuntimeException("Hotbar is empty.");
+			displayError("Hotbar is empty.");
+			return;
 		}
 
 		if (cycle.size() < 2) {
-			throw new PocketPaletteCommandRuntimeException("Need at least 2 items to create a cycle.");
+			displayError("Need at least 2 items to create a cycle.");
+			return;
 		}
 
 		PocketPalette.LOGGER.debug("adding a new item-group from /pocketpalette command");
 
 		boolean succeeded = PaletteConfigManager.tryToAddItemGroup(cycle, groupIndex);
 		if (succeeded) {
-			displayMessage(Component.literal(String.format("PocketPalette: added %d items to group %d", count, groupIndex + 1)));
+			displayMessage(Component.literal(String.format("PocketPalette: added %d items to group %d", cycle.size(), groupIndex + 1)));
 		} else {
-			displayMessage(Component.literal(ChatFormatting.RED + "PocketPalette: failed to add items"));
+			displayError("failed to add items");
 		}
 	}
 
-	private void executeReload() throws PocketPaletteCommandRuntimeException {
-		try {
-			boolean f = PaletteConfigManager.loadAllFromFile();
-			if (!f) throw new PocketPaletteCommandRuntimeException("PocketPalette: failed to reload config file");
+	private void executeReload() {
+		if (PaletteConfigManager.loadAllFromFile()) {
 			displayMessage(Component.literal("PocketPalette: reload succeeded!"));
-		} catch (PocketPaletteCommandRuntimeException e) {
-			displayMessage(Component.literal(ChatFormatting.RED + e.getMessage()));
+		} else {
+			displayError("failed to reload config file");
 		}
 		PocketPaletteClient.showErrorLogToChat();
-	}
-
-	// TODO: 例外を使わずにエラーハンドリングを行う設計に変更する
-	@SuppressWarnings("serial")
-	private static final class PocketPaletteCommandRuntimeException extends RuntimeException {
-		public PocketPaletteCommandRuntimeException(String message) {
-			super(message);
-		}
 	}
 }

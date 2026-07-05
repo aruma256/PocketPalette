@@ -29,18 +29,15 @@ public class PocketPaletteClient implements ClientModInitializer, ClientPlayConn
 
 	public static final String KEY_CATEGORY = "key.category.pocketpalette";
 
-	private static KeyMapping[] keyMappings = {
+	private static final KeyMapping[] KEY_MAPPINGS = {
 			new PaletteKey(GLFW.GLFW_KEY_R, KEY_CATEGORY)
 	};
-
-	public PocketPaletteClient() {
-	}
 
 	@Override
 	public void onInitializeClient() {
 		PaletteConfigManager.loadAllFromFile();
 		//
-		for (KeyMapping key : keyMappings) {
+		for (KeyMapping key : KEY_MAPPINGS) {
 			registerKey(key);
 		}
 		//
