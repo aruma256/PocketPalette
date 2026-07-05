@@ -1,6 +1,10 @@
 # Default Item Groups カタログ（1.21.8 / サバイバル向け作り直し）
 
-新 default config に含める全サイクルの設計カタログ。レビュー・修正後、これを正としてジェネレータを実装する。
+新 default config に含める全サイクルの設計カタログ。
+
+実装は `fabric/src/test/java/.../palette/DefaultItemGroupsCatalog.java`（こちらが機械的な正）。
+JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
+同期・網羅性は `DefaultItemGroupsCatalogTest` が検証する（出荷 JSON とカタログの一致、レジストリとの suffix 網羅チェック）。
 
 ## ルール（確定済み）
 
@@ -113,5 +117,5 @@
 
 ## 集計
 
-- サイクル数: 約 58 本（A:9, B:4, C:18, D:27）
-- 収録アイテム数: 約 700（全1416アイテム中、建材系のほぼ全域をカバー）
+- サイクル数: 58 本（A:9, B:4, C:18, D:27）
+- 収録アイテム数: 798（全1416アイテム中、建材系のほぼ全域をカバー）

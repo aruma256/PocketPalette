@@ -28,7 +28,13 @@ cd fabric
 ./gradlew test       # Run tests
 ./gradlew jar        # Build JAR only
 ./gradlew runClient  # Launch dev client
+./gradlew generateDefaultItemGroups  # default-item-groups.json を再生成
 ```
+
+Default config（`assets/pocketpalette/default-item-groups.json`）は手編集禁止。
+`src/test/.../palette/DefaultItemGroupsCatalog.java` が正で、上記タスクで JSON に焼き込む
+（設計: `docs/default-item-groups-catalog.md`）。カタログと JSON がズレると
+`DefaultItemGroupsCatalogTest` が落ちる。
 
 Fabric uses Java 21（Minecraft 1.21.8 の要件）、official Mojang mappings を使用。
 
