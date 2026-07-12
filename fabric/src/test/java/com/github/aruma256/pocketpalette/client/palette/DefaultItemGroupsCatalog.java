@@ -7,7 +7,7 @@ import java.util.List;
  * Source of truth for the default item groups shipped as
  * {@code assets/pocketpalette/default-item-groups.json}.
  *
- * <p>Design rationale: docs/default-item-groups-catalog.md（サイクル番号 A1〜D27 は同ドキュメント準拠）
+ * <p>Design rationale: docs/default-item-groups-catalog.md（サイクル番号 A1〜E3 は同ドキュメント準拠）
  *
  * <p>Regenerate the JSON with {@code ./gradlew generateDefaultItemGroups}.
  * {@link DefaultItemGroupsCatalogTest} fails if the shipped JSON is out of sync.
@@ -173,7 +173,48 @@ public final class DefaultItemGroupsCatalog {
                 "sculk", "sculk_vein", "sculk_catalyst", "sculk_shrieker", "sculk_sensor"));
         cycles.add(List.of("anvil", "chipped_anvil", "damaged_anvil"));            // D27
 
+        // ---- E. 実用系（サバイバル） ----
+        cycles.add(foodCycle());                                                   // E1
+        cycles.add(toolCycle());                                                   // E2
+        cycles.add(List.of(                                                        // E3
+                "rail", "powered_rail", "detector_rail", "activator_rail",
+                "minecart", "chest_minecart", "furnace_minecart", "tnt_minecart", "hopper_minecart"));
+
         return cycles;
+    }
+
+    // E1: 食料（カテゴリ順: 肉→魚→主食・菓子→野菜・果物→スープ→特殊、生→焼きペア）。
+    // rotten_flesh のみ有害系でも収録。その他の有害系（spider_eye, poisonous_potato,
+    // pufferfish, chicken）・components 持ち（suspicious_stew 等）・chorus_fruit は除外。
+    private static List<String> foodCycle() {
+        List<String> ids = new ArrayList<>();
+        // 肉
+        ids.addAll(List.of("beef", "cooked_beef", "porkchop", "cooked_porkchop",
+                "mutton", "cooked_mutton", "cooked_chicken", "rabbit", "cooked_rabbit", "rotten_flesh"));
+        // 魚
+        ids.addAll(List.of("cod", "cooked_cod", "salmon", "cooked_salmon", "tropical_fish"));
+        // 主食・菓子
+        ids.addAll(List.of("bread", "cookie", "pumpkin_pie", "cake"));
+        // 野菜・果物
+        ids.addAll(List.of("apple", "carrot", "potato", "baked_potato", "beetroot",
+                "melon_slice", "sweet_berries", "glow_berries", "dried_kelp"));
+        // スープ
+        ids.addAll(List.of("mushroom_stew", "beetroot_soup", "rabbit_stew"));
+        // 特殊（金系・ハチミツ）
+        ids.addAll(List.of("golden_carrot", "golden_apple", "enchanted_golden_apple", "honey_bottle"));
+        return ids;
+    }
+
+    // E2: 道具セット。外側=素材、内側=道具種別。
+    // 所持品フィルタにより実際に持っているティアの道具だけが候補に出る
+    private static List<String> toolCycle() {
+        List<String> ids = new ArrayList<>();
+        for (String tier : List.of("wooden", "stone", "iron", "golden", "diamond", "netherite")) {
+            for (String tool : List.of("pickaxe", "shovel", "axe", "hoe")) {
+                ids.add(tier + "_" + tool);
+            }
+        }
+        return ids;
     }
 
     /** 原色（heads）を先頭に、外側=虹順カラバリ・内側=形状（"*" を色名に置換）で展開する。 */

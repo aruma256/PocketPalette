@@ -108,14 +108,27 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 | D26 | 🆕❓ スカルク | `sculk, sculk_vein, sculk_catalyst, sculk_shrieker, sculk_sensor` | 5 |
 | D27 | 🆕❓ 金床 | `anvil, chipped_anvil, damaged_anvil` | 3 |
 
+## E. 実用系（サバイバル）
+
+候補がインベントリ所持品でフィルタされる PocketPalette では、大きな「寄せ集め」サイクルでも
+リングには持っている物しか出ないため、ホットバー枠の節約手段として成立する。
+
+| # | サイクル | 内容 | 数 |
+|---|---------|------|----|
+| E1 | 🆕 食料 | カテゴリ順（肉→魚→主食・菓子→野菜・果物→スープ→特殊）、生→焼きペア。`rotten_flesh` は収録。その他の有害系（`spider_eye, poisonous_potato, pufferfish, chicken`）・components 持ち（`suspicious_stew` 等）・`chorus_fruit` は除外 | 35 |
+| E2 | 🆕 道具セット | 素材（`wooden, stone, iron, golden, diamond, netherite`）ごとに `pickaxe, shovel, axe, hoe`。エンチャ・耐久値は base-item フォールバック + スタック丸ごとスワップで保持される | 24 |
+| E3 | 🆕 レール・トロッコ | `rail, powered_rail, detector_rail, activator_rail, minecart, chest_minecart, furnace_minecart, tnt_minecart, hopper_minecart` | 9 |
+
+- E3: `command_block_minecart` はサバイバル入手不可のため除外。
+
 ## 不採用の方針
 
-- **機能ブロック**（作業台・かまど・チェスト・レール・ピストン・ホッパー等）: 建材サイクルの対象外。必要な人は group 2 に自作
-- **道具・武器・防具・食料・ポーション・スポーンエッグ・音楽ディスク・スケルトンの頭等**: 対象外
+- **機能ブロック**（作業台・かまど・チェスト・ピストン・ホッパー等）: 建材サイクルの対象外。必要な人は group 2 に自作
+- **武器・防具・ポーション・スポーンエッグ・音楽ディスク・スケルトンの頭等**: 対象外（道具・食料・レール系は E で採用）
 - **サバイバル入手不可/非正規**: `petrified_oak_slab`, `infested_*`, `reinforced_deepslate`, `budding_amethyst`, `suspicious_sand/gravel`, `bedrock`, `spawner`, `trial_spawner`, `vault`, `command_block` 系, `barrier`, `light`, `structure_*`, `jigsaw`, `test_*`, `farmland`, `dirt_path`, `dragon_egg`
 - **単品でサイクルにならないもの**: `calcite`, `dripstone_block`, `magma_block`, `glowstone`, `sea_lantern`, `shroomlight`, `bone_block`, `hay_block` 等（❓ 「光源ブロック寄せ集め」「収納ブロック寄せ集め」のような雑多サイクルは作らない方針でよいか）
 
 ## 集計
 
-- サイクル数: 58 本（A:9, B:4, C:18, D:27）
-- 収録アイテム数: 798（全1416アイテム中、建材系のほぼ全域をカバー）
+- サイクル数: 61 本（A:9, B:4, C:18, D:27, E:3）
+- 収録アイテム数: 866（全1416アイテム中、建材系のほぼ全域 + サバイバル実用系をカバー）

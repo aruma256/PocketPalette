@@ -71,7 +71,13 @@ class DefaultItemGroupsCatalogTest {
             Map.entry("_coral_fan", Set.of()),
             Map.entry("_pillar", Set.of()),
             Map.entry("_torch", Set.of("redstone_torch")),
-            Map.entry("_lantern", Set.of("sea_lantern")));
+            Map.entry("_lantern", Set.of("sea_lantern")),
+            Map.entry("_pickaxe", Set.of()),
+            Map.entry("_shovel", Set.of()),
+            Map.entry("_axe", Set.of()),
+            Map.entry("_hoe", Set.of()),
+            Map.entry("_rail", Set.of()),
+            Map.entry("_minecart", Set.of("command_block_minecart")));
 
     private static List<String> allCatalogIds() {
         List<String> ids = new ArrayList<>();
