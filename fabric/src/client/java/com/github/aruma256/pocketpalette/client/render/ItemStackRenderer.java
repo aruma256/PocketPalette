@@ -52,7 +52,9 @@ public final class ItemStackRenderer {
 		//
 		int i = 0;
 		for (ItemStack c: stacks) {
-			double theta = -((double)i - afterimage*direction) / stacks.size() * 2 * Math.PI + Math.PI / 2;
+			// Screen y grows downward, so a positive angle step lays items out
+			// clockwise starting from the bottom of the circle (i = 0)
+			double theta = ((double)i - afterimage*direction) / stacks.size() * 2 * Math.PI + Math.PI / 2;
 			double dx = r * Math.cos(theta);
 			double dy = r * Math.sin(theta);
 			renderAndDecorateItem(guiGraphics, c, (int)Math.round(x + dx), (int)Math.round(y + dy));

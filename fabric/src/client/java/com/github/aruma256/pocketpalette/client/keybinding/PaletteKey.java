@@ -176,9 +176,9 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 			return;
 		}
 		if (wheel > 0) {
-			this.rotateCandidatesForward();
-		} else {
 			this.rotateCandidatesBackward();
+		} else {
+			this.rotateCandidatesForward();
 		}
 		this.swapToFirstCandidate();
 	}
