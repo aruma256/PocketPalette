@@ -11,7 +11,7 @@ This mod is a Survival-focused spin-off of the Palette feature from [LotTweaks](
 - **Item Palette in Survival**: hold <kbd>R</kbd> + scroll to cycle the selected hotbar slot through item groups
 - **Component-aware groups**: enchanted / renamed items can be registered as distinct entries
 - **JSON config**: `config/PocketPalette-ItemGroups.json` (same format as LotTweaks)
-- **In-game group registration**: line up items on your hotbar and run `/pocketpalette add 1` (or `add 2`)
+- **In-game palette editor**: hover an item in any container screen and press the Palette key (<kbd>R</kbd>) to edit its item group
 - `/pocketpalette reload` to reload the config file
 
 ## Requirements
