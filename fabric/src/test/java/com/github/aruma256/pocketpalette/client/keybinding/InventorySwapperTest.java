@@ -1,5 +1,7 @@
 package com.github.aruma256.pocketpalette.client.keybinding;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,8 +29,13 @@ public class InventorySwapperTest {
         }
     }
 
+    private List<Integer> findAll(int selectedSlot, ItemStack target) {
+        return InventorySwapper.findMatchingSlots(i -> slots[i], selectedSlot, target);
+    }
+
     private int find(int selectedSlot, ItemStack target) {
-        return InventorySwapper.findMatchingSlot(i -> slots[i], selectedSlot, target);
+        List<Integer> found = findAll(selectedSlot, target);
+        return found.isEmpty() ? -1 : found.get(0);
     }
 
     private static ItemStack named(net.minecraft.world.item.Item item, String name) {
@@ -46,14 +53,14 @@ public class InventorySwapperTest {
     }
 
     @Test
-    public void testReturnsMinusOneWhenNotFound() {
+    public void testReturnsEmptyWhenNotFound() {
         slots[12] = new ItemStack(Items.GRANITE);
-        assertEquals(-1, find(0, new ItemStack(Items.DIORITE)));
+        assertEquals(List.of(), findAll(0, new ItemStack(Items.DIORITE)));
     }
 
     @Test
-    public void testReturnsMinusOneForEmptyInventory() {
-        assertEquals(-1, find(0, new ItemStack(Items.STONE)));
+    public void testReturnsEmptyForEmptyInventory() {
+        assertEquals(List.of(), findAll(0, new ItemStack(Items.STONE)));
     }
 
     @Test
@@ -61,14 +68,14 @@ public class InventorySwapperTest {
         // The only match sits in the selected slot itself - swapping it with
         // itself is pointless, so it must not be offered
         slots[3] = new ItemStack(Items.GRANITE);
-        assertEquals(-1, find(3, new ItemStack(Items.GRANITE)));
+        assertEquals(List.of(), findAll(3, new ItemStack(Items.GRANITE)));
     }
 
     @Test
     public void testFindsMatchInOtherSlotEvenIfSelectedSlotMatches() {
         slots[3] = new ItemStack(Items.GRANITE);
         slots[20] = new ItemStack(Items.GRANITE);
-        assertEquals(20, find(3, new ItemStack(Items.GRANITE)));
+        assertEquals(List.of(20), findAll(3, new ItemStack(Items.GRANITE)));
     }
 
     @Test
@@ -78,13 +85,39 @@ public class InventorySwapperTest {
         slots[5] = new ItemStack(Items.GRANITE);
         slots[10] = named(Items.GRANITE, "Special");
 
-        assertEquals(10, find(0, named(Items.GRANITE, "Special")));
+        assertEquals(List.of(10), findAll(0, named(Items.GRANITE, "Special")));
     }
 
     @Test
     public void testCountDifferenceStillMatches() {
         slots[7] = new ItemStack(Items.GRANITE, 42);
         assertEquals(7, find(0, new ItemStack(Items.GRANITE)));
+    }
+
+    // --- Multiple matching stacks ---
+
+    @Test
+    public void testMultipleStacksOrderedByCountDescending() {
+        slots[10] = new ItemStack(Items.TORCH, 30);
+        slots[20] = new ItemStack(Items.TORCH, 64);
+        slots[25] = new ItemStack(Items.TORCH, 5);
+        assertEquals(List.of(20, 10, 25), findAll(0, new ItemStack(Items.TORCH)));
+    }
+
+    @Test
+    public void testEqualCountsKeepSlotOrder() {
+        slots[15] = new ItemStack(Items.TORCH, 64);
+        slots[5] = new ItemStack(Items.TORCH, 64);
+        assertEquals(List.of(5, 15), findAll(0, new ItemStack(Items.TORCH)));
+    }
+
+    @Test
+    public void testExactMatchesExcludeFallbackMatches() {
+        // A renamed granite would match via base-item fallback, but exact
+        // matches exist, so only those are offered
+        slots[4] = named(Items.GRANITE, "Renamed");
+        slots[30] = new ItemStack(Items.GRANITE);
+        assertEquals(List.of(30), findAll(0, new ItemStack(Items.GRANITE)));
     }
 
     // --- Stage 2: base-item fallback ---
@@ -94,29 +127,31 @@ public class InventorySwapperTest {
         // Target is plain granite; inventory only has a renamed granite.
         // The plain target may fall back to the base item.
         slots[9] = named(Items.GRANITE, "Renamed");
-        assertEquals(9, find(0, new ItemStack(Items.GRANITE)));
+        assertEquals(List.of(9), findAll(0, new ItemStack(Items.GRANITE)));
     }
 
     @Test
     public void testNoFallbackWhenTargetHasComponents() {
         // Target has components; a plain granite must NOT be treated as a match
         slots[9] = new ItemStack(Items.GRANITE);
-        assertEquals(-1, find(0, named(Items.GRANITE, "Special")));
+        assertEquals(List.of(), findAll(0, named(Items.GRANITE, "Special")));
     }
 
     @Test
-    public void testExactMatchPreferredOverFallback() {
-        // Renamed granite sits in an earlier slot than the exact plain match;
-        // stage 1 (exact) must win even though stage 2 would find slot 4 first
-        slots[4] = named(Items.GRANITE, "Renamed");
-        slots[30] = new ItemStack(Items.GRANITE);
-        assertEquals(30, find(0, new ItemStack(Items.GRANITE)));
+    public void testFallbackReturnsAllBaseItemMatches() {
+        ItemStack renamedA = named(Items.GRANITE, "A");
+        renamedA.setCount(3);
+        ItemStack renamedB = named(Items.GRANITE, "B");
+        renamedB.setCount(40);
+        slots[9] = renamedA;
+        slots[11] = renamedB;
+        assertEquals(List.of(11, 9), findAll(0, new ItemStack(Items.GRANITE)));
     }
 
     @Test
     public void testFallbackSkipsSelectedSlot() {
         slots[2] = named(Items.GRANITE, "Renamed");
-        assertEquals(-1, find(2, new ItemStack(Items.GRANITE)));
+        assertEquals(List.of(), findAll(2, new ItemStack(Items.GRANITE)));
     }
 
     // --- Inventory index -> InventoryMenu slot index conversion ---

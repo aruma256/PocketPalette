@@ -1,8 +1,10 @@
 package com.github.aruma256.pocketpalette.client.keybinding;
 
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import com.github.aruma256.pocketpalette.PocketPalette;
 import com.github.aruma256.pocketpalette.client.event.RenderHotbarEvent;
@@ -15,14 +17,35 @@ import com.github.aruma256.pocketpalette.client.render.ItemStackRenderer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
 @Environment(EnvType.CLIENT)
 public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarListener {
 
-	protected final Deque<ItemStack> candidates = new LinkedList<>();
+	/**
+	 * One ring entry = one physical inventory stack. {@code slot} tracks
+	 * where the stack currently sits; swaps exchange the slot values of the
+	 * two candidates involved, so the ring stays consistent while rotating.
+	 */
+	static final class Candidate {
+		final ItemStack stack;
+		int slot;
+
+		Candidate(ItemStack stack, int slot) {
+			this.stack = stack;
+			this.slot = slot;
+		}
+	}
+
+	protected final Deque<Candidate> candidates = new LinkedList<>();
 	protected int lastRotateTime = -1;
 	protected byte rotateDirection = 0;
+
+	// The candidate currently in the selected hotbar slot (invariant:
+	// handCandidate.slot == selected slot, which cannot change while the
+	// palette key is held because scroll events are intercepted)
+	private Candidate handCandidate;
 
 	private int phase = 0;
 
@@ -56,35 +79,48 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 		this.rotateDirection = 0;
 		this.updatePhase();
 		candidates.clear();
+		handCandidate = null;
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.player == null || mc.player.isSpectator()) {
 			return;
 		}
-		ItemStack itemStack = mc.player.getInventory().getSelectedItem();
+		Inventory inventory = mc.player.getInventory();
+		ItemStack itemStack = inventory.getSelectedItem();
 		if (itemStack.isEmpty()) {
 			return;
 		}
 		List<ItemStack> results = ItemPalette.getAllCycleItems(itemStack, getGroupIndex());
-		if (results == null || results.size() <= 1) {
+		if (results == null || results.isEmpty()) {
 			return;
 		}
 		// Unlike Creative-based palettes, we cannot conjure items out of thin
-		// air — only cycle entries that actually exist in the inventory can be
-		// swapped in. The current item (index 0) is always a candidate.
-		candidates.add(results.get(0));
-		for (int i = 1; i < results.size(); i++) {
-			if (InventorySwapper.findSlotWithItem(mc.player, results.get(i)) != -1) {
-				candidates.add(results.get(i));
+		// air — the ring offers the actual inventory stacks, one candidate per
+		// stack, in cycle order. The held stack always leads; other stacks of
+		// the same item follow it, which doubles as a restock ("swap in a full
+		// stack of what I'm holding").
+		candidates.add(new Candidate(itemStack.copy(), inventory.getSelectedSlot()));
+		Set<Integer> claimedSlots = new HashSet<>();
+		for (ItemStack result : results) {
+			for (int slot : InventorySwapper.findSlotsWithItem(mc.player, result)) {
+				// A slot may match more than one cycle entry (base-item
+				// fallback); each physical stack appears only once
+				if (!claimedSlots.add(slot)) {
+					continue;
+				}
+				candidates.add(new Candidate(inventory.getItem(slot).copy(), slot));
 			}
 		}
 		if (candidates.size() <= 1) {
 			candidates.clear();
+			return;
 		}
+		handCandidate = candidates.getFirst();
 	}
 
 	@Override
 	protected void onKeyReleased() {
 		candidates.clear();
+		handCandidate = null;
 	}
 
 	protected void rotateCandidatesForward() {
@@ -104,16 +140,23 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 		if (mc.player == null) {
 			return;
 		}
-		ItemStack target = candidates.getFirst();
-		ItemStack selected = mc.player.getInventory().getSelectedItem();
-		if (ItemStack.isSameItemSameComponents(selected, target)) {
-			return; // already holding it (e.g. rotated back to the start)
+		Candidate target = candidates.getFirst();
+		if (target == handCandidate) {
+			return; // rotated back to the stack already in hand
 		}
-		int slot = InventorySwapper.findSlotWithItem(mc.player, target);
-		if (slot == -1) {
-			return; // the item disappeared from the inventory (consumed/moved)
+		ItemStack inSlot = mc.player.getInventory().getItem(target.slot);
+		if (!ItemStack.isSameItemSameComponents(inSlot, target.stack)) {
+			return; // the stack moved or was consumed since the key was pressed
 		}
-		InventorySwapper.swapWithSelected(slot);
+		if (!InventorySwapper.swapWithSelected(target.slot)) {
+			return;
+		}
+		// The stacks traded places: the previous hand stack now sits in the
+		// target's old slot, and the target is in the selected hotbar slot
+		int targetSlot = target.slot;
+		target.slot = handCandidate.slot;
+		handCandidate.slot = targetSlot;
+		handCandidate = target;
 	}
 
 	@Override
@@ -144,6 +187,7 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 	public void onRenderHotbar(RenderHotbarEvent event) {
 		if (this.pressTime == 0) {
 			candidates.clear();
+			handCandidate = null;
 			return;
 		}
 		if (candidates.isEmpty()) {
@@ -153,7 +197,8 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 		int x = mc.getWindow().getGuiScaledWidth() / 2 - 90 + mc.player.getInventory().getSelectedSlot() * 20 + 2;
 		int y = mc.getWindow().getGuiScaledHeight() - 16 - 3;
 		y -= 50 + (20 + candidates.size());
-		ItemStackRenderer.renderItemStacks(event.getGuiGraphics(), candidates, x, y, pressTime, event.getPartialTicks(), lastRotateTime, rotateDirection);
+		List<ItemStack> stacks = candidates.stream().map(candidate -> candidate.stack).toList();
+		ItemStackRenderer.renderItemStacks(event.getGuiGraphics(), stacks, x, y, pressTime, event.getPartialTicks(), lastRotateTime, rotateDirection);
 	}
 
 }

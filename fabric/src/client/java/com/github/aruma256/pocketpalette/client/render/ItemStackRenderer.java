@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import com.github.aruma256.pocketpalette.PocketPalette;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 
@@ -70,6 +71,9 @@ public final class ItemStackRenderer {
 
 	private static void renderAndDecorateItem(GuiGraphics guiGraphics, ItemStack itemStack, int x, int y) {
 		guiGraphics.renderItem(itemStack, x, y);
+		// Candidates are real inventory stacks; the count (and durability bar)
+		// is what tells identical-item stacks apart on the ring
+		guiGraphics.renderItemDecorations(Minecraft.getInstance().font, itemStack, x, y);
 	}
 
 }

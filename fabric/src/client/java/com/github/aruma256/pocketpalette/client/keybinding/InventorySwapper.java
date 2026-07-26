@@ -1,6 +1,10 @@
 package com.github.aruma256.pocketpalette.client.keybinding;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.IntFunction;
+import java.util.function.Predicate;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -23,62 +27,71 @@ public final class InventorySwapper {
 	private InventorySwapper() {}
 
 	/**
-	 * Find an inventory slot (0-35, excluding the selected hotbar slot)
-	 * containing an item that matches the target stack.
+	 * Find all inventory slots (0-35, excluding the selected hotbar slot)
+	 * containing an item that matches the target stack, ordered by stack
+	 * count descending (ties keep slot order).
 	 * Tries an exact component match first; if the target has no custom
-	 * components, falls back to matching by base item only.
+	 * components and no exact match exists, falls back to matching by
+	 * base item only.
 	 *
-	 * @return the inventory slot index, or -1 if not found
+	 * @return matching inventory slot indices, empty if none
 	 */
-	public static int findSlotWithItem(Player player, ItemStack target) {
+	public static List<Integer> findSlotsWithItem(Player player, ItemStack target) {
 		Inventory inventory = player.getInventory();
-		return findMatchingSlot(inventory::getItem, inventory.getSelectedSlot(), target);
+		return findMatchingSlots(inventory::getItem, inventory.getSelectedSlot(), target);
 	}
 
-	// Visible for testing: same contract as findSlotWithItem, but reads slots
+	// Visible for testing: same contract as findSlotsWithItem, but reads slots
 	// through a function so no Player/Inventory instance is required
-	static int findMatchingSlot(IntFunction<ItemStack> slotGetter, int selectedSlot, ItemStack target) {
+	static List<Integer> findMatchingSlots(IntFunction<ItemStack> slotGetter, int selectedSlot, ItemStack target) {
 		// Stage 1: exact match (item + components)
-		for (int i = 0; i < Inventory.INVENTORY_SIZE; i++) {
-			if (i == selectedSlot) {
-				continue;
-			}
-			if (ItemStack.isSameItemSameComponents(slotGetter.apply(i), target)) {
-				return i;
-			}
+		List<Integer> exactMatches = collectMatches(slotGetter, selectedSlot,
+				stack -> ItemStack.isSameItemSameComponents(stack, target));
+		if (!exactMatches.isEmpty()) {
+			return exactMatches;
 		}
 
 		// Stage 2: fallback to base item match, only when the target itself
 		// has no custom components (mirrors ItemPalette's 2-stage lookup)
 		if (target.getComponentsPatch().isEmpty()) {
-			for (int i = 0; i < Inventory.INVENTORY_SIZE; i++) {
-				if (i == selectedSlot) {
-					continue;
-				}
-				ItemStack stack = slotGetter.apply(i);
-				if (!stack.isEmpty() && stack.is(target.getItem())) {
-					return i;
-				}
-			}
+			return collectMatches(slotGetter, selectedSlot,
+					stack -> !stack.isEmpty() && stack.is(target.getItem()));
 		}
 
-		return -1;
+		return List.of();
+	}
+
+	private static List<Integer> collectMatches(IntFunction<ItemStack> slotGetter, int selectedSlot, Predicate<ItemStack> matcher) {
+		List<Integer> slots = new ArrayList<>();
+		for (int i = 0; i < Inventory.INVENTORY_SIZE; i++) {
+			if (i == selectedSlot) {
+				continue;
+			}
+			if (matcher.test(slotGetter.apply(i))) {
+				slots.add(i);
+			}
+		}
+		// Fullest stack first, so one scroll reaches the most useful stack
+		slots.sort(Comparator.comparingInt((Integer slot) -> slotGetter.apply(slot).getCount()).reversed());
+		return slots;
 	}
 
 	/**
 	 * Swap the given inventory slot (0-35) with the selected hotbar slot.
 	 * Sends a SWAP click through the player's InventoryMenu, so the server
 	 * performs the swap — no creative permissions required.
+	 *
+	 * @return true if the SWAP click was sent
 	 */
-	public static void swapWithSelected(int inventorySlot) {
+	public static boolean swapWithSelected(int inventorySlot) {
 		Minecraft mc = Minecraft.getInstance();
 		LocalPlayer player = mc.player;
 		if (player == null || mc.gameMode == null) {
-			return;
+			return false;
 		}
 		if (player.containerMenu != player.inventoryMenu) {
 			// Another container is open; a SWAP click would target the wrong menu
-			return;
+			return false;
 		}
 		int menuSlot = inventorySlotToMenuSlot(inventorySlot);
 		int selectedHotbarSlot = player.getInventory().getSelectedSlot();
@@ -88,6 +101,7 @@ public final class InventorySwapper {
 				selectedHotbarSlot,
 				ClickType.SWAP,
 				player);
+		return true;
 	}
 
 	/**
