@@ -22,7 +22,7 @@ This mod is a Survival-focused spin-off of the Palette feature from [LotTweaks](
 
 ## License
 
-This mod is licensed under the [GNU General Public License v3.0](fabric/LICENSE).
+This mod is licensed under the [GNU General Public License v3.0](LICENSE).
 
 ## Development
 
