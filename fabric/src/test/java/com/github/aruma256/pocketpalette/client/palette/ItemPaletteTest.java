@@ -302,6 +302,26 @@ public class ItemPaletteTest {
     }
 
     @Test
+    public void testGetCycleEntries_preservesComponentlessStartEntryOnFallback() {
+        // Runtime display keeps the actual stack, but inventory matching must
+        // retain the componentless palette entry that accepted it. Otherwise
+        // a damaged or enchanted tool becomes a component-exact query and
+        // cannot find a pristine copy of the same tool.
+        loadSimpleCycle(0);
+
+        ItemStack namedStone = new ItemStack(Items.STONE);
+        namedStone.set(DataComponents.CUSTOM_NAME, Component.literal("Special Stone"));
+
+        List<ItemState> entries = ItemPalette.getCycleEntries(namedStone, 0);
+
+        assertNotNull(entries);
+        assertEquals(2, entries.size());
+        assertEquals(new ItemState(new ItemStack(Items.STONE)), entries.get(0));
+        assertFalse(entries.get(0).hasComponents());
+        assertEquals(new ItemState(new ItemStack(Items.GRANITE)), entries.get(1));
+    }
+
+    @Test
     public void testLoadGroups_skipsCyclesWithLessThan2Items() {
         List<ItemState> tooShort = List.of(new ItemState(new ItemStack(Items.STONE)));
         loadCycle(0, tooShort);

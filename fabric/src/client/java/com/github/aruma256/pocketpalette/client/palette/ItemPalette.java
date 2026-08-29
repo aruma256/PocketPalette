@@ -56,6 +56,32 @@ public class ItemPalette {
     }
 
     public static List<ItemStack> getAllCycleItems(ItemStack itemStack, int groupIndex) {
+        List<ItemState> entries = getCycleEntries(itemStack, groupIndex);
+        if (entries == null) {
+            return null;
+        }
+
+        List<ItemStack> result = new ArrayList<>();
+
+        // Preserve the actual held stack for display, even when it matched a
+        // componentless palette entry through fallback.
+        result.add(itemStack);
+
+        for (int i = 1; i < entries.size(); i++) {
+            result.add(entries.get(i).toItemStack());
+        }
+
+        return result;
+    }
+
+    /**
+     * Return the configured cycle entries in rotation order. Unlike
+     * {@link #getAllCycleItems(ItemStack, int)}, the first element is the
+     * palette entry that matched the queried stack, not the queried stack
+     * itself. This preserves whether inventory matching should use an exact
+     * component match or a componentless base-item match.
+     */
+    public static List<ItemState> getCycleEntries(ItemStack itemStack, int groupIndex) {
         Map<ItemState, List<ItemState>> cache = getCache(itemStack, groupIndex);
         if (cache == null) {
             return null;
@@ -76,23 +102,18 @@ public class ItemPalette {
             return null;
         }
 
-        // Find the starting position and build the result list
-        return buildCycleListFromState(cycle, key, itemStack);
+        return buildCycleEntries(cycle, key);
     }
 
-    private static List<ItemStack> buildCycleListFromState(List<ItemState> cycle, ItemState startKey, ItemStack originalStack) {
-        List<ItemStack> result = new ArrayList<>();
+    private static List<ItemState> buildCycleEntries(List<ItemState> cycle, ItemState startKey) {
+        List<ItemState> result = new ArrayList<>();
 
         // Key not found in cycle shouldn't happen, but handle gracefully (start at 0)
         int startIndex = Math.max(0, cycle.indexOf(startKey));
 
-        // Add the original stack first (preserving its components if any)
-        result.add(originalStack);
-
-        // Add remaining items in order
-        for (int i = 1; i < cycle.size(); i++) {
+        for (int i = 0; i < cycle.size(); i++) {
             int index = (startIndex + i) % cycle.size();
-            result.add(cycle.get(index).toItemStack());
+            result.add(cycle.get(index));
         }
 
         return result;

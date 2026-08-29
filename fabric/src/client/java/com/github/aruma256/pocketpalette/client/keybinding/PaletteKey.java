@@ -12,6 +12,7 @@ import com.github.aruma256.pocketpalette.client.event.RenderHotbarEvent.RenderHo
 import com.github.aruma256.pocketpalette.client.event.ScrollEvent;
 import com.github.aruma256.pocketpalette.client.event.ScrollEvent.ScrollListener;
 import com.github.aruma256.pocketpalette.client.palette.ItemPalette;
+import com.github.aruma256.pocketpalette.client.palette.ItemState;
 import com.github.aruma256.pocketpalette.client.render.ItemStackRenderer;
 
 import net.fabricmc.api.EnvType;
@@ -89,8 +90,8 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 		if (itemStack.isEmpty()) {
 			return;
 		}
-		List<ItemStack> results = ItemPalette.getAllCycleItems(itemStack, getGroupIndex());
-		if (results == null || results.isEmpty()) {
+		List<ItemState> entries = ItemPalette.getCycleEntries(itemStack, getGroupIndex());
+		if (entries == null || entries.isEmpty()) {
 			return;
 		}
 		// Unlike Creative-based palettes, we cannot conjure items out of thin
@@ -100,8 +101,8 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 		// stack of what I'm holding").
 		candidates.add(new Candidate(itemStack.copy(), inventory.getSelectedSlot()));
 		Set<Integer> claimedSlots = new HashSet<>();
-		for (ItemStack result : results) {
-			for (int slot : InventorySwapper.findSlotsWithItem(mc.player, result)) {
+		for (ItemState entry : entries) {
+			for (int slot : InventorySwapper.findSlotsMatchingPaletteEntry(mc.player, entry)) {
 				// A slot may match more than one cycle entry (base-item
 				// fallback); each physical stack appears only once
 				if (!claimedSlots.add(slot)) {

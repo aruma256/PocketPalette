@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
 
+import com.github.aruma256.pocketpalette.client.palette.ItemState;
+
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -28,37 +30,29 @@ public final class InventorySwapper {
 
 	/**
 	 * Find all inventory slots (0-35, excluding the selected hotbar slot)
-	 * containing an item that matches the target stack, ordered by stack
+	 * containing an item that matches the palette entry, ordered by stack
 	 * count descending (ties keep slot order).
-	 * Tries an exact component match first; if the target has no custom
-	 * components and no exact match exists, falls back to matching by
-	 * base item only.
+	 * A componentless entry matches every stack of the same base item; an
+	 * entry with components requires an exact item-and-components match.
 	 *
 	 * @return matching inventory slot indices, empty if none
 	 */
-	public static List<Integer> findSlotsWithItem(Player player, ItemStack target) {
+	public static List<Integer> findSlotsMatchingPaletteEntry(Player player, ItemState entry) {
 		Inventory inventory = player.getInventory();
-		return findMatchingSlots(inventory::getItem, inventory.getSelectedSlot(), target);
+		return findMatchingSlots(inventory::getItem, inventory.getSelectedSlot(), entry);
 	}
 
-	// Visible for testing: same contract as findSlotsWithItem, but reads slots
+	// Visible for testing: same contract as findSlotsMatchingPaletteEntry, but reads slots
 	// through a function so no Player/Inventory instance is required
-	static List<Integer> findMatchingSlots(IntFunction<ItemStack> slotGetter, int selectedSlot, ItemStack target) {
-		// Stage 1: exact match (item + components)
-		List<Integer> exactMatches = collectMatches(slotGetter, selectedSlot,
-				stack -> ItemStack.isSameItemSameComponents(stack, target));
-		if (!exactMatches.isEmpty()) {
-			return exactMatches;
-		}
-
-		// Stage 2: fallback to base item match, only when the target itself
-		// has no custom components (mirrors ItemPalette's 2-stage lookup)
-		if (target.getComponentsPatch().isEmpty()) {
+	static List<Integer> findMatchingSlots(IntFunction<ItemStack> slotGetter, int selectedSlot, ItemState entry) {
+		ItemStack target = entry.toItemStack();
+		if (!entry.hasComponents()) {
 			return collectMatches(slotGetter, selectedSlot,
 					stack -> !stack.isEmpty() && stack.is(target.getItem()));
 		}
 
-		return List.of();
+		return collectMatches(slotGetter, selectedSlot,
+				stack -> ItemStack.isSameItemSameComponents(stack, target));
 	}
 
 	private static List<Integer> collectMatches(IntFunction<ItemStack> slotGetter, int selectedSlot, Predicate<ItemStack> matcher) {

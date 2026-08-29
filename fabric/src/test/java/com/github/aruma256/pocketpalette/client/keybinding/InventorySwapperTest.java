@@ -8,6 +8,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.github.aruma256.pocketpalette.MinecraftBootstrapExtension;
+import com.github.aruma256.pocketpalette.client.palette.ItemPalette;
+import com.github.aruma256.pocketpalette.client.palette.ItemState;
 
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -30,7 +32,7 @@ public class InventorySwapperTest {
     }
 
     private List<Integer> findAll(int selectedSlot, ItemStack target) {
-        return InventorySwapper.findMatchingSlots(i -> slots[i], selectedSlot, target);
+        return InventorySwapper.findMatchingSlots(i -> slots[i], selectedSlot, new ItemState(target));
     }
 
     private int find(int selectedSlot, ItemStack target) {
@@ -44,7 +46,7 @@ public class InventorySwapperTest {
         return stack;
     }
 
-    // --- Stage 1: exact match (item + components) ---
+    // --- Basic matching behavior ---
 
     @Test
     public void testFindsExactMatch() {
@@ -112,15 +114,41 @@ public class InventorySwapperTest {
     }
 
     @Test
-    public void testExactMatchesExcludeFallbackMatches() {
-        // A renamed granite would match via base-item fallback, but exact
-        // matches exist, so only those are offered
-        slots[4] = named(Items.GRANITE, "Renamed");
-        slots[30] = new ItemStack(Items.GRANITE);
-        assertEquals(List.of(30), findAll(0, new ItemStack(Items.GRANITE)));
+    public void testComponentlessPaletteEntryIncludesAllBaseItemVariants() {
+        // A componentless palette entry acts as a base-item wildcard. A
+        // pristine tool must not hide damaged variants merely because it is
+        // also an exact match for the entry.
+        ItemStack damagedPickaxe = new ItemStack(Items.DIAMOND_PICKAXE);
+        damagedPickaxe.setDamageValue(100);
+        slots[4] = damagedPickaxe;
+        slots[30] = new ItemStack(Items.DIAMOND_PICKAXE);
+
+        assertEquals(List.of(4, 30), findAll(0, new ItemStack(Items.DIAMOND_PICKAXE)));
     }
 
-    // --- Stage 2: base-item fallback ---
+    @Test
+    public void testComponentlessToolCycleMatchesPristineAndDamagedStacksBothDirections() {
+        ItemState pickaxeEntry = new ItemState(new ItemStack(Items.DIAMOND_PICKAXE));
+        ItemPalette.loadGroups(List.of(List.of(List.of(
+                pickaxeEntry,
+                new ItemState(new ItemStack(Items.DIAMOND_SHOVEL))))));
+
+        ItemStack damagedPickaxe = new ItemStack(Items.DIAMOND_PICKAXE);
+        damagedPickaxe.setDamageValue(100);
+        slots[0] = damagedPickaxe;
+        slots[9] = new ItemStack(Items.DIAMOND_PICKAXE);
+
+        ItemState entryFromDamaged = ItemPalette.getCycleEntries(damagedPickaxe, 0).getFirst();
+        ItemState entryFromPristine = ItemPalette.getCycleEntries(slots[9], 0).getFirst();
+
+        assertEquals(pickaxeEntry, entryFromDamaged);
+        assertEquals(List.of(9),
+                InventorySwapper.findMatchingSlots(i -> slots[i], 0, entryFromDamaged));
+        assertEquals(List.of(0),
+                InventorySwapper.findMatchingSlots(i -> slots[i], 9, entryFromPristine));
+    }
+
+    // --- Componentless palette entries ---
 
     @Test
     public void testFallbackToBaseItemWhenTargetHasNoComponents() {

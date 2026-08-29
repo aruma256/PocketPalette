@@ -72,7 +72,7 @@ Tests use JUnit Jupiter with Minecraft Bootstrap for game environment initializa
 
 ## Key Design Decisions
 - **Survival swap instead of Creative overwrite**: LotTweaks uses `handleCreativeModeItemAdd` (Creative only). PocketPalette sends a SWAP container click on the player's `InventoryMenu`, which the server executes — works in Survival and Creative, no server-side mod needed. Swaps are skipped while another container is open (`player.containerMenu != player.inventoryMenu`).
-- **Candidates are inventory-limited**: on key press, the cycle list from `ItemPalette` is filtered by `InventorySwapper.findSlotWithItem` (exact component match first; base-item fallback only when the config entry has no components).
+- **Candidates are inventory-limited**: on key press, `ItemPalette` resolves the configured cycle (exact component match first, then base-item fallback), and `InventorySwapper.findSlotsMatchingPaletteEntry` finds physical stacks. A componentless config entry matches every stack of the same base item; an entry with components requires an exact match. See `docs/palette-component-matching.md`.
 - **Config format**: same JSON schema as LotTweaks latest (`config_version: 1`, `groups` → cycles → `{id, components}`). No legacy text migration (new mod), so LotTweaks' `ConfigMigrator` / `ItemGroupParser` / `PaletteGroup` were intentionally not ported.
 
 ## LotTweaks からの移植時の注意（1.21.8 API）
