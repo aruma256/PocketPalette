@@ -57,7 +57,7 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 | C1 | ✏️ 石 | `stone, stone_slab, stone_stairs, stone_pressure_plate, stone_button, smooth_stone, smooth_stone_slab,`<br>`granite, granite_slab, granite_stairs, granite_wall, polished_granite, polished_granite_slab, polished_granite_stairs,`<br>`diorite`（granite と同構成）`, andesite`（同） | 28 |
 | C2 | 🆕 丸石 | `cobblestone, cobblestone_slab, cobblestone_stairs, cobblestone_wall, mossy_cobblestone, +slab/stairs/wall` | 8 |
 | C3 | ✏️ 石レンガ | `stone_bricks, stone_brick_slab, stone_brick_stairs, stone_brick_wall, chiseled_stone_bricks, cracked_stone_bricks, mossy_stone_bricks, +slab/stairs/wall` | 10 |
-| C4 | 🆕 深層岩 | `deepslate, cobbled_deepslate, +slab/stairs/wall, chiseled_deepslate, polished_deepslate, +slab/stairs/wall, deepslate_bricks, +slab/stairs/wall, cracked_deepslate_bricks, deepslate_tiles, +slab/stairs/wall, cracked_deepslate_tiles` | 19 |
+| C4 | 🆕 深層岩 | `deepslate, cobbled_deepslate, +slab/stairs/wall, chiseled_deepslate, polished_deepslate, +slab/stairs/wall, deepslate_bricks, +slab/stairs/wall, cracked_deepslate_bricks, deepslate_tiles, +slab/stairs/wall, cracked_deepslate_tiles` | 20 |
 | C5 | 🆕 凝灰岩 | `tuff, +slab/stairs/wall, chiseled_tuff, polished_tuff, +slab/stairs/wall, tuff_bricks, +slab/stairs/wall, chiseled_tuff_bricks` | 14 |
 | C6 | ✏️ 砂岩 | `sandstone, sandstone_slab, sandstone_stairs, sandstone_wall, chiseled_sandstone, cut_sandstone, cut_sandstone_slab, smooth_sandstone, smooth_sandstone_slab, smooth_sandstone_stairs` + red_ 同構成 | 22 |
 | C7 | 🆕 レンガ | `bricks, brick_slab, brick_stairs, brick_wall` | 4 |
@@ -118,8 +118,10 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 | E1 | 🆕 食料 | カテゴリ順（肉→魚→主食・菓子→野菜・果物→スープ→特殊）、生→焼きペア。`rotten_flesh` は収録。その他の有害系（`spider_eye, poisonous_potato, pufferfish, chicken`）・components 持ち（`suspicious_stew` 等）・`chorus_fruit` は除外 | 35 |
 | E2 | 🆕 道具セット | 素材（`wooden, stone, iron, golden, diamond, netherite`）ごとに `pickaxe, shovel, axe, hoe`。エンチャ・耐久値は base-item フォールバック + スタック丸ごとスワップで保持される | 24 |
 | E3 | 🆕 レール・トロッコ | `rail, powered_rail, detector_rail, activator_rail, minecart, chest_minecart, furnace_minecart, tnt_minecart, hopper_minecart` | 9 |
+| E4 | 🆕 バケツ | `bucket, water_bucket, lava_bucket, milk_bucket, powder_snow_bucket` | 5 |
 
 - E3: `command_block_minecart` はサバイバル入手不可のため除外。
+- E4: 生物入りバケツは生物運搬という別用途のため除外。
 
 ## 不採用の方針
 
@@ -130,5 +132,5 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 
 ## 集計
 
-- サイクル数: 61 本（A:9, B:4, C:18, D:27, E:3）
-- 収録アイテム数: 866（全1416アイテム中、建材系のほぼ全域 + サバイバル実用系をカバー）
+- サイクル数: 62 本（A:9, B:4, C:18, D:27, E:4）
+- 収録アイテム数: 871（全1416アイテム中、建材系のほぼ全域 + サバイバル実用系をカバー）

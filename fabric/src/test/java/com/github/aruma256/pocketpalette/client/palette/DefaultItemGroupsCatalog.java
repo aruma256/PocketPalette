@@ -7,7 +7,7 @@ import java.util.List;
  * Source of truth for the default item groups shipped as
  * {@code assets/pocketpalette/default-item-groups.json}.
  *
- * <p>Design rationale: docs/default-item-groups-catalog.md（サイクル番号 A1〜E3 は同ドキュメント準拠）
+ * <p>Design rationale: docs/default-item-groups-catalog.md（サイクル番号 A1〜E4 は同ドキュメント準拠）
  *
  * <p>Regenerate the JSON with {@code ./gradlew generateDefaultItemGroups}.
  * {@link DefaultItemGroupsCatalogTest} fails if the shipped JSON is out of sync.
@@ -179,6 +179,8 @@ public final class DefaultItemGroupsCatalog {
         cycles.add(List.of(                                                        // E3
                 "rail", "powered_rail", "detector_rail", "activator_rail",
                 "minecart", "chest_minecart", "furnace_minecart", "tnt_minecart", "hopper_minecart"));
+        cycles.add(List.of(                                                        // E4
+                "bucket", "water_bucket", "lava_bucket", "milk_bucket", "powder_snow_bucket"));
 
         return cycles;
     }
