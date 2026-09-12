@@ -18,6 +18,7 @@ import com.github.aruma256.pocketpalette.client.render.ItemStackRenderer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
@@ -43,10 +44,12 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 	protected int lastRotateTime = -1;
 	protected byte rotateDirection = 0;
 
-	// The candidate currently in the selected hotbar slot (invariant:
-	// handCandidate.slot == selected slot, which cannot change while the
-	// palette key is held because scroll events are intercepted)
+	// Revalidated before scrolling, since number keys can change the selected slot.
 	private Candidate handCandidate;
+	private LocalPlayer observedPlayer;
+	private int observedSelectedSlot = -1;
+	private boolean observedSpectator;
+	private final ItemStack[] inventorySnapshot = new ItemStack[Inventory.INVENTORY_SIZE];
 
 	private int phase = 0;
 
@@ -76,12 +79,18 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 
 	@Override
 	protected void onKeyPressStart() {
+		this.updatePhase();
+		rebuildCandidates();
+	}
+
+	private void rebuildCandidates() {
+		this.pressTime = 1;
 		this.lastRotateTime = 0;
 		this.rotateDirection = 0;
-		this.updatePhase();
 		candidates.clear();
 		handCandidate = null;
 		Minecraft mc = Minecraft.getInstance();
+		rememberInventory();
 		if (mc.player == null || mc.player.isSpectator()) {
 			return;
 		}
@@ -122,6 +131,47 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 	protected void onKeyReleased() {
 		candidates.clear();
 		handCandidate = null;
+		observedPlayer = null;
+		observedSelectedSlot = -1;
+		java.util.Arrays.fill(inventorySnapshot, null);
+	}
+
+	private void rememberInventory() {
+		observedPlayer = Minecraft.getInstance().player;
+		if (observedPlayer == null) return;
+		Inventory inventory = observedPlayer.getInventory();
+		observedSelectedSlot = inventory.getSelectedSlot();
+		observedSpectator = observedPlayer.isSpectator();
+		for (int slot = 0; slot < inventorySnapshot.length; slot++) {
+			inventorySnapshot[slot] = inventory.getItem(slot).copy();
+		}
+	}
+
+	private void refreshCandidatesIfChanged() {
+		LocalPlayer player = Minecraft.getInstance().player;
+		if (player != observedPlayer) {
+			rebuildCandidates();
+			return;
+		}
+		if (player == null) return;
+		Inventory inventory = player.getInventory();
+		if (inventory.getSelectedSlot() != observedSelectedSlot || player.isSpectator() != observedSpectator) {
+			rebuildCandidates();
+			return;
+		}
+		// Compare all 36 slots, including non-candidates: commands, pickups and
+		// consumption can add candidates as well as change or remove them.
+		for (int slot = 0; slot < inventorySnapshot.length; slot++) {
+			if (!ItemStack.matches(inventorySnapshot[slot], inventory.getItem(slot))) {
+				rebuildCandidates();
+				return;
+			}
+		}
+	}
+
+	@Override
+	protected void whilePressed() {
+		refreshCandidatesIfChanged();
 	}
 
 	protected void rotateCandidatesForward() {
@@ -158,6 +208,9 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 		target.slot = handCandidate.slot;
 		handCandidate.slot = targetSlot;
 		handCandidate = target;
+		// The locally predicted SWAP is our own change; keep its ring order.
+		// A later server correction will still differ from this snapshot.
+		rememberInventory();
 	}
 
 	@Override
@@ -173,6 +226,8 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 			return;
 		}
 		event.setCanceled(true);
+		// Input callbacks can arrive between ticks, so validate here too.
+		refreshCandidatesIfChanged();
 		if (candidates.isEmpty()) {
 			return;
 		}
