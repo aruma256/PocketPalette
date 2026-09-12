@@ -1,8 +1,8 @@
-name: test
+name: ci
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
   workflow_dispatch:
 
@@ -37,3 +37,23 @@ jobs:
 
       - name: Build and test
         run: ./gradlew build
+
+      - name: Install virtual display and software rendering
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri
+
+      - name: Run client game test
+        env:
+          LIBGL_ALWAYS_SOFTWARE: 'true'
+        run: xvfb-run -a ./gradlew runClientGameTest
+
+      - name: Store test reports and client diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            fabric/build/reports/
+            fabric/build/test-results/
+            fabric/build/run/**/logs/
+            fabric/build/run/**/crash-reports/
+            fabric/build/run/**/screenshots/

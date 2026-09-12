@@ -31,4 +31,17 @@ cd fabric
 ./gradlew build      # Full build
 ./gradlew test       # Run tests
 ./gradlew runClient  # Launch dev client
+./gradlew runClientGameTest  # Launch an isolated client and test Survival palette swaps
 ```
+
+CI runs on every branch push and pull request. The client game test creates a
+temporary singleplayer world, holds R and scrolls in both directions, and checks
+the resulting inventories on both the client and integrated server, including
+stack counts and custom names. It also checks that normal hotbar scrolling resumes
+after R is released. Test code is kept in `fabric/src/gametest` and is not included
+in the published mod JAR.
+
+On Linux without a display, run `xvfb-run -a ./gradlew runClientGameTest` with
+Xvfb and Mesa installed. CI uploads test reports, client logs and screenshots as
+the `test-reports` artifact. The client test uses `fabric/build/run/clientGameTest`
+instead of the normal development world's run directory.
