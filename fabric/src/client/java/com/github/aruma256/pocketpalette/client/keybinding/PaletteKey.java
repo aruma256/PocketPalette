@@ -97,8 +97,8 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 		// Unlike Creative-based palettes, we cannot conjure items out of thin
 		// air — the ring offers the actual inventory stacks, one candidate per
 		// stack, in cycle order. The held stack always leads; other stacks of
-		// the same item follow it, which doubles as a restock ("swap in a full
-		// stack of what I'm holding").
+		// the same item follow it, ordered by count ascending, then remaining
+		// durability ascending, so smaller stacks and worn tools come first.
 		candidates.add(new Candidate(itemStack.copy(), inventory.getSelectedSlot()));
 		Set<Integer> claimedSlots = new HashSet<>();
 		for (ItemState entry : entries) {

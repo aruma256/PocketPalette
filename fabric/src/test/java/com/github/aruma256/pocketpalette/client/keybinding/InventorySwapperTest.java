@@ -99,11 +99,11 @@ public class InventorySwapperTest {
     // --- Multiple matching stacks ---
 
     @Test
-    public void testMultipleStacksOrderedByCountDescending() {
+    public void testMultipleStacksOrderedByCountAscending() {
         slots[10] = new ItemStack(Items.TORCH, 30);
         slots[20] = new ItemStack(Items.TORCH, 64);
         slots[25] = new ItemStack(Items.TORCH, 5);
-        assertEquals(List.of(20, 10, 25), findAll(0, new ItemStack(Items.TORCH)));
+        assertEquals(List.of(25, 10, 20), findAll(0, new ItemStack(Items.TORCH)));
     }
 
     @Test
@@ -111,6 +111,21 @@ public class InventorySwapperTest {
         slots[15] = new ItemStack(Items.TORCH, 64);
         slots[5] = new ItemStack(Items.TORCH, 64);
         assertEquals(List.of(5, 15), findAll(0, new ItemStack(Items.TORCH)));
+    }
+
+    @Test
+    public void testEqualCountsOrderedByRemainingDurabilityAscendingThenSlot() {
+        slots[3] = new ItemStack(Items.DIAMOND_PICKAXE);
+        slots[10] = new ItemStack(Items.DIAMOND_PICKAXE);
+        slots[10].setDamageValue(100);
+        slots[20] = new ItemStack(Items.DIAMOND_PICKAXE);
+        slots[20].setDamageValue(500);
+        slots[25] = slots[20].copy();
+        // The held tool is excluded even when it would sort between candidates.
+        slots[0] = new ItemStack(Items.DIAMOND_PICKAXE);
+        slots[0].setDamageValue(200);
+
+        assertEquals(List.of(20, 25, 10, 3), findAll(0, new ItemStack(Items.DIAMOND_PICKAXE)));
     }
 
     @Test
@@ -173,7 +188,7 @@ public class InventorySwapperTest {
         renamedB.setCount(40);
         slots[9] = renamedA;
         slots[11] = renamedB;
-        assertEquals(List.of(11, 9), findAll(0, new ItemStack(Items.GRANITE)));
+        assertEquals(List.of(9, 11), findAll(0, new ItemStack(Items.GRANITE)));
     }
 
     @Test

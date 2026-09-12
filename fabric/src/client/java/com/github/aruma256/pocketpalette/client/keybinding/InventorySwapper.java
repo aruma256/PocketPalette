@@ -31,7 +31,7 @@ public final class InventorySwapper {
 	/**
 	 * Find all inventory slots (0-35, excluding the selected hotbar slot)
 	 * containing an item that matches the palette entry, ordered by stack
-	 * count descending (ties keep slot order).
+	 * count ascending, then remaining durability ascending (ties keep slot order).
 	 * A componentless entry matches every stack of the same base item; an
 	 * entry with components requires an exact item-and-components match.
 	 *
@@ -65,8 +65,12 @@ public final class InventorySwapper {
 				slots.add(i);
 			}
 		}
-		// Fullest stack first, so one scroll reaches the most useful stack
-		slots.sort(Comparator.comparingInt((Integer slot) -> slotGetter.apply(slot).getCount()).reversed());
+		// Use up smaller stacks and worn tools first; stable sorting preserves slot order on ties.
+		slots.sort(Comparator.comparingInt((Integer slot) -> slotGetter.apply(slot).getCount())
+				.thenComparingInt(slot -> {
+					ItemStack stack = slotGetter.apply(slot);
+					return stack.isDamageableItem() ? stack.getMaxDamage() - stack.getDamageValue() : 0;
+				}));
 		return slots;
 	}
 
