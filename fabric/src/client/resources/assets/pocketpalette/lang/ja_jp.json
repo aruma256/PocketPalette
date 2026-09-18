@@ -7,5 +7,7 @@
   "pocketpalette.editor.inventory_hint": "下のアイテムをクリックで追加",
   "pocketpalette.editor.duplicate_in_cycle": "このサイクルに登録済みです",
   "pocketpalette.editor.duplicate_in_group": "このグループの別のサイクルで使用されています",
-  "pocketpalette.editor.cycle_removed": "PocketPalette: アイテムが2個未満のサイクルを削除しました"
+  "pocketpalette.editor.cycle_removed": "PocketPalette: アイテムが2個未満のサイクルを削除しました",
+  "pocketpalette.config.editing_disabled": "PocketPalette: 設定を完全に読み込めなかったため、編集と保存を停止しました。PocketPalette-ItemGroups.json を修正して /pocketpalette reload を実行してください。",
+  "pocketpalette.config.save_failed": "PocketPalette: 設定ファイルへの保存に失敗しました。変更はメモリ上にのみ反映されています。詳細はログを確認してください。"
 }

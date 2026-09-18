@@ -1,7 +1,9 @@
 package com.github.aruma256.pocketpalette.client.gui;
 
+import com.github.aruma256.pocketpalette.client.PocketPaletteClient;
 import com.github.aruma256.pocketpalette.client.mixin.AbstractContainerScreenAccessor;
 import com.github.aruma256.pocketpalette.client.palette.ItemValidation;
+import com.github.aruma256.pocketpalette.client.palette.PaletteConfigManager;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -54,6 +56,10 @@ public final class PaletteEditorOpener {
 		}
 		ItemStack stack = slot.getItem();
 		if (!ItemValidation.isValidStack(stack)) {
+			return;
+		}
+		if (!PaletteConfigManager.isEditingAllowed()) {
+			PocketPaletteClient.showConfigError("pocketpalette.config.editing_disabled");
 			return;
 		}
 		// Close the container properly (sends the close packet) before

@@ -2,7 +2,6 @@ package com.github.aruma256.pocketpalette.client;
 
 import org.lwjgl.glfw.GLFW;
 
-import com.github.aruma256.pocketpalette.PocketPalette;
 import com.github.aruma256.pocketpalette.client.event.RenderHotbarEvent;
 import com.github.aruma256.pocketpalette.client.event.RenderHotbarEvent.RenderHotbarListener;
 import com.github.aruma256.pocketpalette.client.event.ScrollEvent;
@@ -68,12 +67,9 @@ public class PocketPaletteClient implements ClientModInitializer, ClientPlayConn
 		KeyBindingHelper.registerKeyBinding(key);
 	}
 
-	public static void showErrorLogToChat() {
-		if (PocketPalette.CONFIG.SHOW_CONFIG_ERROR_LOG_TO_CHAT) {
-			Minecraft mc = Minecraft.getInstance();
-			for (String line : PaletteConfigManager.LOG_CONFIG_WARNINGS) {
-				mc.getChatListener().handleSystemMessage(Component.literal(String.format("PocketPalette: %s%s", ChatFormatting.RED, line)), false);
-			}
+	public static void showConfigLoadStatus() {
+		if (!PaletteConfigManager.isEditingAllowed()) {
+			showConfigError("pocketpalette.config.editing_disabled");
 		}
 	}
 
@@ -81,7 +77,12 @@ public class PocketPaletteClient implements ClientModInitializer, ClientPlayConn
 	public void onPlayReady(ClientPacketListener handler, PacketSender sender, Minecraft client) {
 		// Reload config now that dynamic registries (enchantments, etc.) are available
 		PaletteConfigManager.loadAllFromFile();
-		showErrorLogToChat();
+		showConfigLoadStatus();
+	}
+
+	public static void showConfigError(String translationKey) {
+		Minecraft.getInstance().getChatListener().handleSystemMessage(
+				Component.translatable(translationKey).withStyle(ChatFormatting.RED), false);
 	}
 
 }

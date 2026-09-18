@@ -2,6 +2,7 @@ package com.github.aruma256.pocketpalette.client.gui;
 
 import java.util.List;
 
+import com.github.aruma256.pocketpalette.client.PocketPaletteClient;
 import com.github.aruma256.pocketpalette.client.palette.ItemPalette;
 import com.github.aruma256.pocketpalette.client.palette.ItemState;
 import com.github.aruma256.pocketpalette.client.palette.PaletteConfigManager;
@@ -273,6 +274,11 @@ public class PaletteEditScreen extends Screen {
 
 	@Override
 	public void onClose() {
+		if (!PaletteConfigManager.isEditingAllowed()) {
+			PocketPaletteClient.showConfigError("pocketpalette.config.editing_disabled");
+			super.onClose();
+			return;
+		}
 		boolean discarded = false;
 		for (int g = 0; g < model.getGroupCount(); g++) {
 			if (model.willDiscardCycle(g)) {
@@ -280,7 +286,9 @@ public class PaletteEditScreen extends Screen {
 			}
 		}
 		if (model.commit()) {
-			PaletteConfigManager.applyGroupDataAndSave();
+			if (!PaletteConfigManager.applyGroupDataAndSave()) {
+				PocketPaletteClient.showConfigError("pocketpalette.config.save_failed");
+			}
 		}
 		if (discarded) {
 			this.minecraft.getChatListener().handleSystemMessage(

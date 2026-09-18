@@ -17,7 +17,6 @@ public class PocketPalette {
 	public static class CONFIG {
 		public static boolean DISABLE_ANIMATIONS = false;
 		public static boolean SNEAK_TO_SWITCH_GROUP = false;
-		public static boolean SHOW_CONFIG_ERROR_LOG_TO_CHAT = true;
 	}
 
 }

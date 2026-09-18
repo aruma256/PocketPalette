@@ -96,6 +96,8 @@ public class PaletteConfigManagerTest {
 
     @Test
     public void testApplyGroupDataAndSave_registersAndPersistsCycle() {
+        assertTrue(PaletteConfigManager.loadAllFromFile());
+        ItemPalette.clear();
         List<ItemState> newCycle = new ArrayList<>();
         newCycle.add(new ItemState(new ItemStack(Items.STONE)));
         newCycle.add(new ItemState(new ItemStack(Items.GRANITE)));
@@ -105,12 +107,68 @@ public class PaletteConfigManagerTest {
         groupData.add(new ArrayList<>());
         groupData.get(0).add(newCycle);
 
-        PaletteConfigManager.applyGroupDataAndSave();
+        assertTrue(PaletteConfigManager.applyGroupDataAndSave());
 
         // Palette is updated in memory
         assertTrue(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
         // ... and persisted to disk
         ItemGroupsConfigLoader.LoadResult saved = ItemGroupsConfigLoader.load(tempDir);
         assertEquals(1, saved.getGroups().get(0).size());
+    }
+
+    @Test
+    public void failedLoadBlocksWritesUntilSuccessfulReload() throws IOException {
+        var file = new File(tempDir, ItemGroupsConfigLoader.CONFIG_FILE_NAME).toPath();
+        String valid = """
+            {"config_version":1,"groups":[[[{"id":"minecraft:stone"},{"id":"minecraft:granite"}]]]}
+            """;
+        for (String invalid : List.of("{ broken json", """
+                {"config_version":1,"groups":[[[{"id":"minecraft:stone"},{"id":"minecraft:granite"},{"id":"missing:item"}]]]}
+                """, """
+                {"config_version":1,"groups":[[[{"id":"minecraft:stone","components":"invalid"},{"id":"minecraft:granite"}]]]}
+                """)) {
+            Files.writeString(file, valid);
+            assertTrue(PaletteConfigManager.loadAllFromFile());
+            var previous = ItemPalette.getGroupData();
+            Files.writeString(file, invalid);
+            assertFalse(PaletteConfigManager.loadAllFromFile());
+            assertFalse(PaletteConfigManager.isEditingAllowed());
+            assertSame(previous, ItemPalette.getGroupData());
+            assertFalse(PaletteConfigManager.saveAllToFile());
+            assertFalse(PaletteConfigManager.applyGroupDataAndSave());
+            assertEquals(invalid, Files.readString(file));
+
+            Files.writeString(file, valid);
+            assertTrue(PaletteConfigManager.loadAllFromFile());
+            assertTrue(PaletteConfigManager.isEditingAllowed());
+            assertTrue(PaletteConfigManager.saveAllToFile());
+        }
+    }
+
+    @Test
+    public void failedSerializationPreservesOriginalFile() throws IOException {
+        assertTrue(PaletteConfigManager.loadAllFromFile());
+        var file = new File(tempDir, ItemGroupsConfigLoader.CONFIG_FILE_NAME).toPath();
+        String original = Files.readString(file);
+        List<ItemState> invalidCycle = new ArrayList<>();
+        invalidCycle.add(null);
+        assertFalse(ItemGroupsConfigLoader.save(tempDir, List.of(List.of(invalidCycle))));
+        assertEquals(original, Files.readString(file));
+        try (var files = Files.list(tempDir.toPath())) {
+            assertEquals(1, files.count());
+        }
+        assertTrue(PaletteConfigManager.isEditingAllowed());
+    }
+
+    @Test
+    public void saveIoFailureIsReportedWithoutBlockingEditing() throws IOException {
+        assertTrue(PaletteConfigManager.loadAllFromFile());
+        var file = new File(tempDir, ItemGroupsConfigLoader.CONFIG_FILE_NAME).toPath();
+        Files.delete(file);
+        Files.createDirectory(file);
+        Files.writeString(file.resolve("obstruction"), "keep");
+        assertFalse(PaletteConfigManager.applyGroupDataAndSave());
+        assertTrue(PaletteConfigManager.isEditingAllowed());
+        assertEquals("keep", Files.readString(file.resolve("obstruction")));
     }
 }

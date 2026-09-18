@@ -4,10 +4,11 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -225,54 +226,65 @@ public class ItemGroupsConfigLoader {
         return new ItemState(itemStack);
     }
 
-    public static void save(File configDir, List<List<List<ItemState>>> groups) {
-        if (!configDir.exists()) {
-            configDir.mkdirs();
-        }
-
+    public static boolean save(File configDir, List<List<List<ItemState>>> groups) {
         File file = new File(configDir, CONFIG_FILE_NAME);
         Gson compactGson = new Gson();
+        Path temporary = null;
 
-        try (BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
+        try {
+            Files.createDirectories(configDir.toPath());
+            temporary = Files.createTempFile(configDir.toPath(), CONFIG_FILE_NAME, ".tmp");
+            try (BufferedWriter writer = Files.newBufferedWriter(temporary, StandardCharsets.UTF_8)) {
 
-            writer.write("{\n");
-            writer.write("  \"config_version\": " + CURRENT_CONFIG_VERSION + ",\n");
-            writer.write("  \"groups\": [\n");
+                writer.write("{\n");
+                writer.write("  \"config_version\": " + CURRENT_CONFIG_VERSION + ",\n");
+                writer.write("  \"groups\": [\n");
 
-            for (int groupIdx = 0; groupIdx < groups.size(); groupIdx++) {
-                List<List<ItemState>> cyclesInGroup = groups.get(groupIdx);
-                writer.write("    [\n");
+                for (int groupIdx = 0; groupIdx < groups.size(); groupIdx++) {
+                    List<List<ItemState>> cyclesInGroup = groups.get(groupIdx);
+                    writer.write("    [\n");
 
-                for (int cycleIdx = 0; cycleIdx < cyclesInGroup.size(); cycleIdx++) {
-                    List<ItemState> itemsInCycle = cyclesInGroup.get(cycleIdx);
+                    for (int cycleIdx = 0; cycleIdx < cyclesInGroup.size(); cycleIdx++) {
+                        List<ItemState> itemsInCycle = cyclesInGroup.get(cycleIdx);
 
-                    // Build cycle array inline (single line)
-                    JsonArray itemsArray = new JsonArray();
-                    for (ItemState itemState : itemsInCycle) {
-                        itemsArray.add(serializeItemState(itemState));
+                        // Build cycle array inline (single line)
+                        JsonArray itemsArray = new JsonArray();
+                        for (ItemState itemState : itemsInCycle) {
+                            itemsArray.add(serializeItemState(itemState));
+                        }
+                        String cycleJson = compactGson.toJson(itemsArray);
+
+                        writer.write("      " + cycleJson);
+                        if (cycleIdx < cyclesInGroup.size() - 1) {
+                            writer.write(",");
+                        }
+                        writer.write("\n");
                     }
-                    String cycleJson = compactGson.toJson(itemsArray);
 
-                    writer.write("      " + cycleJson);
-                    if (cycleIdx < cyclesInGroup.size() - 1) {
+                    writer.write("    ]");
+                    if (groupIdx < groups.size() - 1) {
                         writer.write(",");
                     }
                     writer.write("\n");
                 }
 
-                writer.write("    ]");
-                if (groupIdx < groups.size() - 1) {
-                    writer.write(",");
-                }
-                writer.write("\n");
+                writer.write("  ]\n");
+                writer.write("}\n");
             }
-
-            writer.write("  ]\n");
-            writer.write("}\n");
-
-        } catch (IOException e) {
+            Files.move(temporary, file.toPath(), StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
+            return true;
+        } catch (Exception e) {
             PocketPalette.LOGGER.error("Failed to save config file", e);
+            return false;
+        } finally {
+            if (temporary != null) {
+                try {
+                    Files.deleteIfExists(temporary);
+                } catch (IOException e) {
+                    PocketPalette.LOGGER.warn("Failed to remove temporary config file", e);
+                }
+            }
         }
     }
 
@@ -292,7 +304,7 @@ public class ItemGroupsConfigLoader {
                 Tag nbt = JsonOps.INSTANCE.convertTo(NbtOps.INSTANCE, encoded);
                 obj.addProperty("components", nbt.toString());
             } catch (Exception e) {
-                PocketPalette.LOGGER.warn("Failed to serialize components for {}", id, e);
+                throw new IllegalStateException("Failed to serialize components for " + id, e);
             }
         }
 

@@ -47,6 +47,6 @@ public class PocketPaletteCommand implements ClientCommandRegistrationCallback {
 		} else {
 			displayError("failed to reload config file");
 		}
-		PocketPaletteClient.showErrorLogToChat();
+		PocketPaletteClient.showConfigLoadStatus();
 	}
 }

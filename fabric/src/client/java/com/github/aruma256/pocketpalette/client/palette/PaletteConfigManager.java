@@ -14,12 +14,19 @@ public class PaletteConfigManager {
     private static final String DEFAULT_JSON_RESOURCE = "/assets/pocketpalette/default-item-groups.json";
 
     private static File configDir = new File("config");
+    // Only a complete, warning-free load permits overwriting the source config.
+    private static boolean editingAllowed;
+
+    public static boolean isEditingAllowed() {
+        return editingAllowed;
+    }
 
     public static final List<String> LOG_CONFIG_WARNINGS = new ArrayList<>();
 
     // Visible for testing: redirect config I/O to a temporary directory
     static void setConfigDir(File dir) {
         configDir = dir;
+        editingAllowed = false;
     }
 
     public static boolean loadAllFromFile() {
@@ -34,9 +41,14 @@ public class PaletteConfigManager {
         // Load from JSON
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(configDir);
         LOG_CONFIG_WARNINGS.addAll(result.getWarnings());
-        ItemPalette.loadGroups(result.getGroups());
-
-        return result.getWarnings().isEmpty();
+        for (String warning : result.getWarnings()) {
+            PocketPalette.LOGGER.warn("Config: {}", warning);
+        }
+        editingAllowed = result.getWarnings().isEmpty();
+        if (editingAllowed) {
+            ItemPalette.loadGroups(result.getGroups());
+        }
+        return editingAllowed;
     }
 
     private static void copyDefaultJsonFromResources() {
@@ -60,18 +72,24 @@ public class PaletteConfigManager {
         }
     }
 
-    public static void saveAllToFile() {
+    public static boolean saveAllToFile() {
+        if (!editingAllowed) {
+            return false;
+        }
         List<List<List<ItemState>>> groupData = ItemPalette.getGroupData();
-        ItemGroupsConfigLoader.save(configDir, groupData);
+        return ItemGroupsConfigLoader.save(configDir, groupData);
     }
 
     /**
      * Rebuild the palette caches from the (mutated) group data and persist it.
      * Used by the palette editor after committing an edit session.
      */
-    public static void applyGroupDataAndSave() {
+    public static boolean applyGroupDataAndSave() {
+        if (!editingAllowed) {
+            return false;
+        }
         ItemPalette.loadGroups(ItemPalette.getGroupData());
-        saveAllToFile();
+        return saveAllToFile();
     }
 
 }

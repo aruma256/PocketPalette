@@ -7,5 +7,7 @@
   "pocketpalette.editor.inventory_hint": "Click an item below to add it",
   "pocketpalette.editor.duplicate_in_cycle": "Already in this cycle",
   "pocketpalette.editor.duplicate_in_group": "Already used by another cycle in this group",
-  "pocketpalette.editor.cycle_removed": "PocketPalette: a cycle with fewer than 2 items was removed"
+  "pocketpalette.editor.cycle_removed": "PocketPalette: a cycle with fewer than 2 items was removed",
+  "pocketpalette.config.editing_disabled": "PocketPalette: Config could not be fully loaded. Editing and saving are disabled. Fix PocketPalette-ItemGroups.json and run /pocketpalette reload.",
+  "pocketpalette.config.save_failed": "PocketPalette: Could not save changes to the config file. Changes remain in memory only. Check the log for details."
 }
