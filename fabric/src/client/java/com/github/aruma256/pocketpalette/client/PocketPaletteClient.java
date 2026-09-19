@@ -3,9 +3,7 @@ package com.github.aruma256.pocketpalette.client;
 import org.lwjgl.glfw.GLFW;
 
 import com.github.aruma256.pocketpalette.client.event.RenderHotbarEvent;
-import com.github.aruma256.pocketpalette.client.event.RenderHotbarEvent.RenderHotbarListener;
 import com.github.aruma256.pocketpalette.client.event.ScrollEvent;
-import com.github.aruma256.pocketpalette.client.event.ScrollEvent.ScrollListener;
 import com.github.aruma256.pocketpalette.client.gui.PaletteEditorOpener;
 import com.github.aruma256.pocketpalette.client.keybinding.PaletteKey;
 import com.github.aruma256.pocketpalette.client.palette.PaletteConfigManager;
@@ -19,7 +17,6 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.Component;
@@ -31,40 +28,18 @@ public class PocketPaletteClient implements ClientModInitializer, ClientPlayConn
 
 	private static final PaletteKey PALETTE_KEY = new PaletteKey(GLFW.GLFW_KEY_R, KEY_CATEGORY);
 
-	private static final KeyMapping[] KEY_MAPPINGS = {
-			PALETTE_KEY
-	};
-
 	@Override
 	public void onInitializeClient() {
 		PaletteConfigManager.loadAllFromFile();
-		//
-		for (KeyMapping key : KEY_MAPPINGS) {
-			registerKey(key);
-		}
-		//
+
+		KeyBindingHelper.registerKeyBinding(PALETTE_KEY);
+		ClientTickEvents.END_CLIENT_TICK.register(PALETTE_KEY);
+		RenderHotbarEvent.registerListener(PALETTE_KEY);
+		ScrollEvent.registerListener(PALETTE_KEY);
 		PaletteEditorOpener.register(PALETTE_KEY);
-		//
+
 		ClientPlayConnectionEvents.JOIN.register(this);
-		//
 		ClientCommandRegistrationCallback.EVENT.register(new PocketPaletteCommand());
-	}
-
-	private static void registerToMyEventBus(Object obj) {
-		if (obj instanceof ClientTickEvents.EndTick) {
-			ClientTickEvents.END_CLIENT_TICK.register((ClientTickEvents.EndTick)obj);
-		}
-		if (obj instanceof RenderHotbarListener) {
-			RenderHotbarEvent.registerListener((RenderHotbarListener)obj);
-		}
-		if (obj instanceof ScrollListener) {
-			ScrollEvent.registerListener((ScrollListener)obj);
-		}
-	}
-
-	private static void registerKey(KeyMapping key) {
-		registerToMyEventBus(key);
-		KeyBindingHelper.registerKeyBinding(key);
 	}
 
 	public static void showConfigLoadStatus() {

@@ -9,6 +9,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
@@ -33,39 +34,40 @@ public final class PaletteEditorOpener {
 			if (!(screen instanceof AbstractContainerScreen<?>)) {
 				return;
 			}
-			ScreenKeyboardEvents.afterKeyPress(screen).register(
-					(s, key, scancode, modifiers) -> tryOpen(client, s, editorKey, key, scancode));
+			// Consume the editor input before the container can move or drop the hovered item.
+			ScreenKeyboardEvents.allowKeyPress(screen).register(
+					(s, key, scancode, modifiers) -> !editorKey.matches(key, scancode) || !tryOpen(client, s));
+			ScreenMouseEvents.allowMouseClick(screen).register(
+					(s, mouseX, mouseY, button) -> !editorKey.matchesMouse(button) || !tryOpen(client, s));
 		});
 	}
 
-	private static void tryOpen(Minecraft client, Screen screen, KeyMapping editorKey, int key, int scancode) {
-		if (!editorKey.matches(key, scancode)) {
-			return;
-		}
+	/** @return whether the editor handled the input, so the container must not process it */
+	private static boolean tryOpen(Minecraft client, Screen screen) {
 		if (client.player == null || client.player.isSpectator()) {
-			return;
+			return false;
 		}
-		// afterKeyPress fires even when the screen consumed the key, so ignore
-		// key presses that were typed into a focused text field
+		// Leave input to focused text fields (creative search, anvil names, etc.).
 		if (isTextInputFocused(screen)) {
-			return;
+			return false;
 		}
 		Slot slot = ((AbstractContainerScreenAccessor) screen).pocketpalette$getHoveredSlot();
 		if (slot == null || !slot.hasItem()) {
-			return;
+			return false;
 		}
 		ItemStack stack = slot.getItem();
 		if (!ItemValidation.isValidStack(stack)) {
-			return;
+			return false;
 		}
 		if (!PaletteConfigManager.isEditingAllowed()) {
 			PocketPaletteClient.showConfigError("pocketpalette.config.editing_disabled");
-			return;
+			return true;
 		}
 		// Close the container properly (sends the close packet) before
 		// replacing the screen, so the server-side container state stays sane
 		client.player.closeContainer();
 		client.setScreen(new PaletteEditScreen(stack));
+		return true;
 	}
 
 	private static boolean isTextInputFocused(GuiEventListener listener) {

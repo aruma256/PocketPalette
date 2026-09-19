@@ -6,12 +6,19 @@ import java.util.Map;
 import org.lwjgl.glfw.GLFW;
 
 import com.github.aruma256.pocketpalette.PocketPalette;
+import com.github.aruma256.pocketpalette.client.gui.PaletteEditScreen;
+import com.github.aruma256.pocketpalette.client.mixin.AbstractContainerScreenAccessor;
 import com.github.aruma256.pocketpalette.client.palette.ItemPalette;
 import com.github.aruma256.pocketpalette.client.palette.ItemState;
+import com.github.aruma256.pocketpalette.client.palette.PaletteConfigManager;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -61,8 +68,61 @@ public class PaletteClientGameTest implements FabricClientGameTest {
             context.getInput().scroll(1);
             context.waitFor(client -> client.player.getInventory().getSelectedSlot() == 8);
             testInventoryChangesWhileHeld(context, world, stone, andesite);
+            testEditorBindings(context, world, stone, andesite);
             PocketPalette.LOGGER.info("Client game test passed: Survival swap round trip, stack preservation, and R release");
         }
+    }
+
+    private static void testEditorBindings(ClientGameTestContext context,
+            TestSingleplayerContext world, ItemStack stone, ItemStack andesite) {
+        // Replace the swap test's immutable fixture with the normal editable config.
+        context.runOnClient(client -> {
+            if (!PaletteConfigManager.loadAllFromFile()) {
+                throw new AssertionError("Editor test config failed to load");
+            }
+        });
+        KeyMapping paletteKey = context.computeOnClient(client -> java.util.Arrays.stream(client.options.keyMappings)
+                .filter(key -> key.getName().equals("key.pocketpalette.palette")).findFirst().orElseThrow());
+        InputConstants.Key originalKey = context.computeOnClient(client -> KeyBindingHelper.getBoundKeyOf(paletteKey));
+        try {
+            // Q and left click also have container actions: opening must consume them.
+            for (InputConstants.Key binding : List.of(
+                    InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_R),
+                    InputConstants.Type.MOUSE.getOrCreate(GLFW.GLFW_MOUSE_BUTTON_4),
+                    InputConstants.Type.MOUSE.getOrCreate(GLFW.GLFW_MOUSE_BUTTON_LEFT),
+                    InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_Q))) {
+                setServerInventory(world, Map.of(0, stone, 9, andesite));
+                awaitSlots(context, world, 0, Map.of(0, stone, 9, andesite));
+                double[] cursor = new double[2];
+                context.runOnClient(client -> {
+                    paletteKey.setKey(binding);
+                    KeyMapping.resetMapping();
+                    client.setScreen(new InventoryScreen(client.player));
+                    double scale = client.getWindow().getGuiScale();
+                    cursor[0] = ((client.screen.width - 176) / 2 + 16) * scale;
+                    cursor[1] = ((client.screen.height - 166) / 2 + 92) * scale;
+                });
+                context.getInput().setCursorPos(cursor[0], cursor[1]);
+                context.waitFor(client -> ((AbstractContainerScreenAccessor) client.screen)
+                        .pocketpalette$getHoveredSlot() == client.player.inventoryMenu.getSlot(9));
+                context.getInput().pressKey(binding);
+                context.waitFor(client -> client.screen instanceof PaletteEditScreen);
+                context.runOnClient(client -> {
+                    if (!client.player.inventoryMenu.getCarried().isEmpty()) {
+                        throw new AssertionError("Editor input picked up the hovered stack");
+                    }
+                    client.screen.onClose();
+                });
+                awaitSlots(context, world, 0, Map.of(0, stone, 9, andesite));
+            }
+        } finally {
+            context.runOnClient(client -> {
+                paletteKey.setKey(originalKey);
+                KeyMapping.resetMapping();
+                client.setScreen(null);
+            });
+        }
+        PocketPalette.LOGGER.info("Client game test passed: keyboard and mouse editor bindings consume input");
     }
 
     private static void testInventoryChangesWhileHeld(ClientGameTestContext context,
