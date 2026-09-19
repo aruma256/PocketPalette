@@ -42,13 +42,13 @@ public class PaletteConfigManager {
 
         // Load from JSON
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(configDir);
-        LOG_CONFIG_WARNINGS.addAll(result.getWarnings());
-        for (String warning : result.getWarnings()) {
+        LOG_CONFIG_WARNINGS.addAll(result.warnings());
+        for (String warning : result.warnings()) {
             PocketPalette.LOGGER.warn("Config: {}", warning);
         }
-        editingAllowed = result.getWarnings().isEmpty();
+        editingAllowed = result.warnings().isEmpty();
         if (editingAllowed) {
-            ItemPalette.loadGroups(result.getGroups());
+            ItemPalette.loadGroups(result.groups());
             savePending = false;
         }
         return editingAllowed;

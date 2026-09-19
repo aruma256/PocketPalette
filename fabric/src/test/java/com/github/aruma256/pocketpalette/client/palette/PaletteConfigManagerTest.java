@@ -113,7 +113,7 @@ public class PaletteConfigManagerTest {
         assertNotNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0));
         // ... and persisted to disk
         ItemGroupsConfigLoader.LoadResult saved = ItemGroupsConfigLoader.load(tempDir);
-        assertEquals(1, saved.getGroups().get(0).size());
+        assertEquals(1, saved.groups().get(0).size());
     }
 
     @Test
@@ -185,8 +185,8 @@ public class PaletteConfigManagerTest {
         Files.writeString(file, original);
         assertTrue(PaletteConfigManager.commitAndSave(reopened));
         var saved = ItemGroupsConfigLoader.load(tempDir);
-        assertTrue(saved.getWarnings().isEmpty());
-        assertEquals(3, saved.getGroups().getFirst().getFirst().size());
+        assertTrue(saved.warnings().isEmpty());
+        assertEquals(3, saved.groups().getFirst().getFirst().size());
 
         // After a successful retry, an untouched editor must not write again.
         Files.writeString(file, "external change");

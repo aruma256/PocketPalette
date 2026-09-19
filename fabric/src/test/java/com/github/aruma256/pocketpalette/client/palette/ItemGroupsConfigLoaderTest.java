@@ -47,10 +47,10 @@ public class ItemGroupsConfigLoaderTest {
                 """.formatted(TYPED_CUSTOM_DATA.replace("\n", "")));
 
         var result = ItemGroupsConfigLoader.load(tempDir);
-        assertTrue(result.getWarnings().isEmpty(), result.getWarnings().toString());
+        assertTrue(result.warnings().isEmpty(), result.warnings().toString());
         ItemStack expected = new ItemStack(Items.STONE);
         expected.set(DataComponents.CUSTOM_DATA, CustomData.of(TagParser.parseCompoundFully(TYPED_CUSTOM_DATA)));
-        assertEquals(new ItemState(expected), result.getGroups().getFirst().getFirst().getFirst());
+        assertEquals(new ItemState(expected), result.groups().getFirst().getFirst().getFirst());
     }
 
     @Test
@@ -71,8 +71,8 @@ public class ItemGroupsConfigLoaderTest {
         assertEquals(data, savedPatch.get("minecraft:custom_data"));
 
         var result = ItemGroupsConfigLoader.load(tempDir);
-        assertTrue(result.getWarnings().isEmpty(), result.getWarnings().toString());
-        assertEquals(expected, result.getGroups().getFirst().getFirst().getFirst());
+        assertTrue(result.warnings().isEmpty(), result.warnings().toString());
+        assertEquals(expected, result.groups().getFirst().getFirst().getFirst());
     }
 
     @Test
@@ -90,8 +90,8 @@ public class ItemGroupsConfigLoaderTest {
     @Test
     public void testLoad_returnsWarningWhenFileNotFound() {
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
-        assertFalse(result.getWarnings().isEmpty());
-        assertTrue(result.getGroups().isEmpty());
+        assertFalse(result.warnings().isEmpty());
+        assertTrue(result.groups().isEmpty());
     }
 
     @Test
@@ -110,10 +110,10 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertTrue(result.getWarnings().isEmpty(), "Warnings: " + result.getWarnings());
-        assertEquals(1, result.getGroups().size());
-        assertEquals(1, result.getGroups().get(0).size());
-        assertEquals(3, result.getGroups().get(0).get(0).size());
+        assertTrue(result.warnings().isEmpty(), "Warnings: " + result.warnings());
+        assertEquals(1, result.groups().size());
+        assertEquals(1, result.groups().get(0).size());
+        assertEquals(3, result.groups().get(0).get(0).size());
     }
 
     @Test
@@ -135,8 +135,8 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertTrue(result.getWarnings().isEmpty(), "Warnings: " + result.getWarnings());
-        assertEquals(2, result.getGroups().size());
+        assertTrue(result.warnings().isEmpty(), "Warnings: " + result.warnings());
+        assertEquals(2, result.groups().size());
     }
 
     @Test
@@ -156,9 +156,9 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertTrue(result.getWarnings().isEmpty(), "Warnings: " + result.getWarnings());
-        assertEquals(1, result.getGroups().size());
-        assertEquals(2, result.getGroups().get(0).size());
+        assertTrue(result.warnings().isEmpty(), "Warnings: " + result.warnings());
+        assertEquals(1, result.groups().size());
+        assertEquals(2, result.groups().get(0).size());
     }
 
     @Test
@@ -177,11 +177,11 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertFalse(result.getWarnings().isEmpty());
-        assertTrue(result.getWarnings().stream().anyMatch(w -> w.contains("invalid_item_xyz")));
+        assertFalse(result.warnings().isEmpty());
+        assertTrue(result.warnings().stream().anyMatch(w -> w.contains("invalid_item_xyz")));
         // Cycle should still be created with valid items (stone, granite = 2 items)
-        assertEquals(1, result.getGroups().get(0).size());
-        assertEquals(2, result.getGroups().get(0).get(0).size());
+        assertEquals(1, result.groups().get(0).size());
+        assertEquals(2, result.groups().get(0).get(0).size());
     }
 
     @Test
@@ -200,8 +200,8 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertFalse(result.getWarnings().isEmpty());
-        assertTrue(result.getWarnings().stream().anyMatch(w -> w.contains("duplicated")));
+        assertFalse(result.warnings().isEmpty());
+        assertTrue(result.warnings().stream().anyMatch(w -> w.contains("duplicated")));
     }
 
     @Test
@@ -222,8 +222,8 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertFalse(result.getWarnings().isEmpty());
-        assertTrue(result.getWarnings().stream().anyMatch(w -> w.contains("stone") && w.contains("duplicated")));
+        assertFalse(result.warnings().isEmpty());
+        assertTrue(result.warnings().stream().anyMatch(w -> w.contains("stone") && w.contains("duplicated")));
     }
 
     @Test
@@ -246,11 +246,11 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertTrue(result.getWarnings().isEmpty(), "Should allow same item in different groups. Warnings: " + result.getWarnings());
-        assertEquals(2, result.getGroups().size());
+        assertTrue(result.warnings().isEmpty(), "Should allow same item in different groups. Warnings: " + result.warnings());
+        assertEquals(2, result.groups().size());
         // Both groups should have their cycles intact
-        assertEquals(1, result.getGroups().get(0).size());
-        assertEquals(1, result.getGroups().get(1).size());
+        assertEquals(1, result.groups().get(0).size());
+        assertEquals(1, result.groups().get(1).size());
     }
 
     @Test
@@ -269,10 +269,10 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertFalse(result.getWarnings().isEmpty());
-        assertTrue(result.getWarnings().stream().anyMatch(w -> w.contains("less than 2")));
+        assertFalse(result.warnings().isEmpty());
+        assertTrue(result.warnings().stream().anyMatch(w -> w.contains("less than 2")));
         // Empty cycles should not be added
-        assertTrue(result.getGroups().get(0).isEmpty());
+        assertTrue(result.groups().get(0).isEmpty());
     }
 
     @Test
@@ -291,8 +291,8 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertFalse(result.getWarnings().isEmpty());
-        assertTrue(result.getWarnings().stream().anyMatch(w -> w.contains("missing 'id'")));
+        assertFalse(result.warnings().isEmpty());
+        assertTrue(result.warnings().stream().anyMatch(w -> w.contains("missing 'id'")));
     }
 
     @Test
@@ -312,10 +312,10 @@ public class ItemGroupsConfigLoaderTest {
 
         // Load it back and verify
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
-        assertTrue(result.getWarnings().isEmpty(), "Warnings: " + result.getWarnings());
-        assertEquals(1, result.getGroups().size());
-        assertEquals(1, result.getGroups().get(0).size());
-        assertEquals(2, result.getGroups().get(0).get(0).size());
+        assertTrue(result.warnings().isEmpty(), "Warnings: " + result.warnings());
+        assertEquals(1, result.groups().size());
+        assertEquals(1, result.groups().get(0).size());
+        assertEquals(2, result.groups().get(0).get(0).size());
     }
 
     @Test
@@ -350,15 +350,15 @@ public class ItemGroupsConfigLoaderTest {
         // Load back
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertTrue(result.getWarnings().isEmpty(), "Warnings: " + result.getWarnings());
-        assertEquals(2, result.getGroups().size());
-        assertEquals(2, result.getGroups().get(0).size());
-        assertEquals(1, result.getGroups().get(1).size());
+        assertTrue(result.warnings().isEmpty(), "Warnings: " + result.warnings());
+        assertEquals(2, result.groups().size());
+        assertEquals(2, result.groups().get(0).size());
+        assertEquals(1, result.groups().get(1).size());
 
         // Verify items
-        assertEquals(Items.STONE, result.getGroups().get(0).get(0).get(0).toItemStack().getItem());
-        assertEquals(Items.GRANITE, result.getGroups().get(0).get(0).get(1).toItemStack().getItem());
-        assertEquals(Items.DIORITE, result.getGroups().get(0).get(0).get(2).toItemStack().getItem());
+        assertEquals(Items.STONE, result.groups().get(0).get(0).get(0).toItemStack().getItem());
+        assertEquals(Items.GRANITE, result.groups().get(0).get(0).get(1).toItemStack().getItem());
+        assertEquals(Items.DIORITE, result.groups().get(0).get(0).get(2).toItemStack().getItem());
     }
 
     @Test
@@ -377,8 +377,8 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertFalse(result.getWarnings().isEmpty());
-        assertTrue(result.getGroups().isEmpty());
+        assertFalse(result.warnings().isEmpty());
+        assertTrue(result.groups().isEmpty());
     }
 
     @Test
@@ -393,7 +393,7 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertTrue(result.getWarnings().stream().anyMatch(w -> w.contains("version")));
+        assertTrue(result.warnings().stream().anyMatch(w -> w.contains("version")));
     }
 
     @Test
@@ -402,7 +402,7 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertTrue(result.getWarnings().stream().anyMatch(w -> w.contains("version")));
+        assertTrue(result.warnings().stream().anyMatch(w -> w.contains("version")));
     }
 
     @Test
@@ -411,8 +411,8 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertTrue(result.getWarnings().stream().anyMatch(w -> w.contains("groups")));
-        assertTrue(result.getGroups().isEmpty());
+        assertTrue(result.warnings().stream().anyMatch(w -> w.contains("groups")));
+        assertTrue(result.groups().isEmpty());
     }
 
     @Test
@@ -427,8 +427,8 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertTrue(result.getWarnings().isEmpty(), "Warnings: " + result.getWarnings());
-        assertTrue(result.getGroups().isEmpty());
+        assertTrue(result.warnings().isEmpty(), "Warnings: " + result.warnings());
+        assertTrue(result.groups().isEmpty());
     }
 
     @Test
@@ -449,10 +449,10 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertTrue(result.getWarnings().stream().anyMatch(w -> w.contains("NOT a valid id")));
-        assertEquals(1, result.getGroups().size());
-        assertEquals(1, result.getGroups().get(0).size());
-        assertEquals(2, result.getGroups().get(0).get(0).size());
+        assertTrue(result.warnings().stream().anyMatch(w -> w.contains("NOT a valid id")));
+        assertEquals(1, result.groups().size());
+        assertEquals(1, result.groups().get(0).size());
+        assertEquals(2, result.groups().get(0).get(0).size());
     }
 
     // --- Component-aware entries ---
@@ -476,8 +476,8 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertTrue(result.getWarnings().isEmpty(), "Warnings: " + result.getWarnings());
-        ItemState loaded = result.getGroups().get(0).get(0).get(0);
+        assertTrue(result.warnings().isEmpty(), "Warnings: " + result.warnings());
+        ItemState loaded = result.groups().get(0).get(0).get(0);
         assertTrue(loaded.hasComponents());
         assertEquals(Component.literal("Special Stone"),
                 loaded.toItemStack().get(DataComponents.CUSTOM_NAME));
@@ -502,11 +502,11 @@ public class ItemGroupsConfigLoaderTest {
 
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertTrue(result.getWarnings().stream()
+        assertTrue(result.warnings().stream()
                 .anyMatch(w -> w.contains("components") || w.contains("Failed to parse")));
         // The item itself is kept (without components), so the cycle stays valid
-        assertEquals(2, result.getGroups().get(0).get(0).size());
-        assertFalse(result.getGroups().get(0).get(0).get(0).hasComponents());
+        assertEquals(2, result.groups().get(0).get(0).size());
+        assertFalse(result.groups().get(0).get(0).get(0).hasComponents());
     }
 
     @Test
@@ -525,8 +525,8 @@ public class ItemGroupsConfigLoaderTest {
         ItemGroupsConfigLoader.save(tempDir, groups);
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
-        assertTrue(result.getWarnings().isEmpty(), "Warnings: " + result.getWarnings());
-        ItemState loaded = result.getGroups().get(0).get(0).get(0);
+        assertTrue(result.warnings().isEmpty(), "Warnings: " + result.warnings());
+        ItemState loaded = result.groups().get(0).get(0).get(0);
         assertEquals(new ItemState(namedStone), loaded);
         assertEquals(Component.literal("Special Stone"),
                 loaded.toItemStack().get(DataComponents.CUSTOM_NAME));

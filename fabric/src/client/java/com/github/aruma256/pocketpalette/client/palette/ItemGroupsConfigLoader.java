@@ -3,9 +3,7 @@ package com.github.aruma256.pocketpalette.client.palette;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -67,22 +65,7 @@ public class ItemGroupsConfigLoader {
         return RegistryOps.create(NbtOps.INSTANCE, getRegistryAccess());
     }
 
-    public static class LoadResult {
-        private final List<List<List<ItemState>>> groups;
-        private final List<String> warnings;
-
-        public LoadResult(List<List<List<ItemState>>> groups, List<String> warnings) {
-            this.groups = groups;
-            this.warnings = warnings;
-        }
-
-        public List<List<List<ItemState>>> getGroups() {
-            return groups;
-        }
-
-        public List<String> getWarnings() {
-            return warnings;
-        }
+    public record LoadResult(List<List<List<ItemState>>> groups, List<String> warnings) {
     }
 
     public static boolean configExists(File configDir) {
@@ -101,8 +84,7 @@ public class ItemGroupsConfigLoader {
         List<List<List<ItemState>>> groups = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
 
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
 
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
             validateConfigVersion(root, warnings);
