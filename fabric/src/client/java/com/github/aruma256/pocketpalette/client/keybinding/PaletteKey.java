@@ -7,10 +7,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.github.aruma256.pocketpalette.PocketPalette;
-import com.github.aruma256.pocketpalette.client.event.RenderHotbarEvent;
-import com.github.aruma256.pocketpalette.client.event.RenderHotbarEvent.RenderHotbarListener;
-import com.github.aruma256.pocketpalette.client.event.ScrollEvent;
-import com.github.aruma256.pocketpalette.client.event.ScrollEvent.ScrollListener;
 import com.github.aruma256.pocketpalette.client.palette.ItemPalette;
 import com.github.aruma256.pocketpalette.client.palette.ItemState;
 import com.github.aruma256.pocketpalette.client.render.ItemStackRenderer;
@@ -18,12 +14,13 @@ import com.github.aruma256.pocketpalette.client.render.ItemStackRenderer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
 @Environment(EnvType.CLIENT)
-public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarListener {
+public class PaletteKey extends KeyBase {
 
 	/**
 	 * One ring entry = one physical inventory stack. {@code slot} tracks
@@ -213,23 +210,15 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 		rememberInventory();
 	}
 
-	@Override
-	public void onScroll(ScrollEvent event) {
-		if (this.pressTime == 0) {
-			return;
+	/** Returns whether palette input consumes the scroll, even without candidates. */
+	public boolean onScroll(double wheel) {
+		if (this.pressTime == 0 || wheel == 0) {
+			return false;
 		}
-		if (event.isCanceled()) {
-			return;
-		}
-		double wheel = event.getScrollDelta();
-		if (wheel == 0) {
-			return;
-		}
-		event.setCanceled(true);
 		// Input callbacks can arrive between ticks, so validate here too.
 		refreshCandidatesIfChanged();
 		if (candidates.isEmpty()) {
-			return;
+			return true;
 		}
 		if (wheel > 0) {
 			this.rotateCandidatesBackward();
@@ -237,10 +226,10 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 			this.rotateCandidatesForward();
 		}
 		this.swapToFirstCandidate();
+		return true;
 	}
 
-	@Override
-	public void onRenderHotbar(RenderHotbarEvent event) {
+	public void onRenderHotbar(GuiGraphics guiGraphics, float partialTicks) {
 		if (this.pressTime == 0) {
 			candidates.clear();
 			handCandidate = null;
@@ -254,7 +243,7 @@ public class PaletteKey extends KeyBase implements ScrollListener, RenderHotbarL
 		int y = mc.getWindow().getGuiScaledHeight() - 16 - 3;
 		y -= 50 + (20 + candidates.size());
 		List<ItemStack> stacks = candidates.stream().map(candidate -> candidate.stack).toList();
-		ItemStackRenderer.renderItemStacks(event.getGuiGraphics(), stacks, x, y, pressTime, event.getPartialTicks(), lastRotateTime, rotateDirection);
+		ItemStackRenderer.renderItemStacks(guiGraphics, stacks, x, y, pressTime, partialTicks, lastRotateTime, rotateDirection);
 	}
 
 }

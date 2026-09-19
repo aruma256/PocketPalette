@@ -2,8 +2,6 @@ package com.github.aruma256.pocketpalette.client;
 
 import org.lwjgl.glfw.GLFW;
 
-import com.github.aruma256.pocketpalette.client.event.RenderHotbarEvent;
-import com.github.aruma256.pocketpalette.client.event.ScrollEvent;
 import com.github.aruma256.pocketpalette.client.gui.PaletteEditorOpener;
 import com.github.aruma256.pocketpalette.client.keybinding.PaletteKey;
 import com.github.aruma256.pocketpalette.client.palette.PaletteConfigManager;
@@ -18,6 +16,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.Component;
 
@@ -34,12 +33,18 @@ public class PocketPaletteClient implements ClientModInitializer, ClientPlayConn
 
 		KeyBindingHelper.registerKeyBinding(PALETTE_KEY);
 		ClientTickEvents.END_CLIENT_TICK.register(PALETTE_KEY);
-		RenderHotbarEvent.registerListener(PALETTE_KEY);
-		ScrollEvent.registerListener(PALETTE_KEY);
 		PaletteEditorOpener.register(PALETTE_KEY);
 
 		ClientPlayConnectionEvents.JOIN.register(this);
 		ClientCommandRegistrationCallback.EVENT.register(new PocketPaletteCommand());
+	}
+
+	public static boolean onScroll(double scrollAmount) {
+		return PALETTE_KEY.onScroll(scrollAmount);
+	}
+
+	public static void onRenderHotbar(GuiGraphics guiGraphics, float partialTicks) {
+		PALETTE_KEY.onRenderHotbar(guiGraphics, partialTicks);
 	}
 
 	public static void showConfigLoadStatus() {

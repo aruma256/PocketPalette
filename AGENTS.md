@@ -49,7 +49,7 @@ Tests use JUnit Jupiter with Minecraft Bootstrap for game environment initializa
 - `src/main/` - Shared constants only (package: `com.github.aruma256.pocketpalette`)
   - `PocketPalette.java` - MODID / LOGGER / CONFIG constants. **No server entry point** (client-only mod)
 - `src/client/` - All mod logic (package: `com.github.aruma256.pocketpalette.client`)
-  - `PocketPaletteClient.java` - Client entry point (`ClientModInitializer`), keybinding registration, config reload on world join
+  - `PocketPaletteClient.java` - Client entry point (`ClientModInitializer`), keybinding registration, config reload on world join, direct scroll/render callbacks from mixins to `PaletteKey`
   - `PocketPaletteCommand.java` - `/pocketpalette reload`
   - `gui/` - In-game palette editor
     - `PaletteEditorOpener.java` - Opens the editor when the palette key is pressed while hovering an item in a container screen (REI/JEI-style hover + key)
@@ -65,7 +65,6 @@ Tests use JUnit Jupiter with Minecraft Bootstrap for game environment initializa
     - `PaletteConfigManager.java` - Config lifecycle management
     - `PaletteEditModel.java` - GUI-independent editing session for the palette editor (cycle resolution, add/reorder/remove, commit rules)
     - `ItemValidation.java` - Item/stack validity checks
-  - `event/` - Custom event system (`ScrollEvent`, `RenderHotbarEvent`)
   - `mixin/` - `MouseScrollRedirector` (intercept scroll), `HotbarRendererHook` (candidate ring rendering hook), `AbstractContainerScreenAccessor` (expose `hoveredSlot` for the editor opener)
   - `render/` - `ItemStackRenderer` (circular candidate display above hotbar)
 - `src/test/` - JUnit tests for the palette package
