@@ -24,67 +24,55 @@ public class ItemPaletteTest {
         ItemPalette.clear();
     }
 
-    // --- Tests for new API ---
+    // --- Cycle lookup ---
 
     @Test
-    public void testCanCycle_returnsFalseForEmptyPalette() {
-        assertFalse(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
+    public void testGetCycleEntries_returnsNullForEmptyPalette() {
+        assertNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0));
     }
 
     @Test
-    public void testCanCycle_returnsFalseForNullInput() {
-        assertFalse(ItemPalette.canCycle(null, 0));
-    }
-
-    @Test
-    public void testCanCycle_returnsFalseForEmptyStack() {
-        assertFalse(ItemPalette.canCycle(ItemStack.EMPTY, 0));
-    }
-
-    @Test
-    public void testCanCycle_returnsFalseForAir() {
-        assertFalse(ItemPalette.canCycle(new ItemStack(Items.AIR), 0));
-    }
-
-    @Test
-    public void testCanCycle_returnsFalseForInvalidGroupIndex() {
+    public void testGetCycleEntries_returnsNullForNullInput() {
         loadSimpleCycle(0);
-        assertFalse(ItemPalette.canCycle(new ItemStack(Items.STONE), 1));
-        assertFalse(ItemPalette.canCycle(new ItemStack(Items.STONE), -1));
+        assertNull(ItemPalette.getCycleEntries(null, 0));
     }
 
     @Test
-    public void testCanCycle_returnsTrueForRegisteredItem() {
+    public void testGetCycleEntries_returnsNullForEmptyStack() {
         loadSimpleCycle(0);
-
-        assertTrue(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
-        assertTrue(ItemPalette.canCycle(new ItemStack(Items.GRANITE), 0));
+        assertNull(ItemPalette.getCycleEntries(ItemStack.EMPTY, 0));
     }
 
     @Test
-    public void testCanCycle_returnsFalseForUnregisteredItem() {
+    public void testGetCycleEntries_returnsNullForAir() {
+        loadSimpleCycle(0);
+        assertNull(ItemPalette.getCycleEntries(new ItemStack(Items.AIR), 0));
+    }
+
+    @Test
+    public void testGetCycleEntries_returnsNullForInvalidGroupIndex() {
+        loadSimpleCycle(0);
+        assertNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 1));
+        assertNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), -1));
+    }
+
+    @Test
+    public void testGetCycleEntries_returnsCycleForRegisteredItem() {
         loadSimpleCycle(0);
 
-        assertFalse(ItemPalette.canCycle(new ItemStack(Items.DIORITE), 0));
+        assertNotNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0));
+        assertNotNull(ItemPalette.getCycleEntries(new ItemStack(Items.GRANITE), 0));
     }
 
     @Test
-    public void testGetAllCycleItems_returnsNullForNullInput() {
-        assertNull(ItemPalette.getAllCycleItems(null, 0));
+    public void testGetCycleEntries_returnsNullForUnregisteredItem() {
+        loadSimpleCycle(0);
+
+        assertNull(ItemPalette.getCycleEntries(new ItemStack(Items.DIORITE), 0));
     }
 
     @Test
-    public void testGetAllCycleItems_returnsNullForEmptyStack() {
-        assertNull(ItemPalette.getAllCycleItems(ItemStack.EMPTY, 0));
-    }
-
-    @Test
-    public void testGetAllCycleItems_returnsNullForUnregisteredItem() {
-        assertNull(ItemPalette.getAllCycleItems(new ItemStack(Items.STONE), 0));
-    }
-
-    @Test
-    public void testGetAllCycleItems_returnsCycleList() {
+    public void testGetCycleEntries_returnsCycleList() {
         List<ItemState> cycle = Arrays.asList(
                 new ItemState(new ItemStack(Items.STONE)),
                 new ItemState(new ItemStack(Items.GRANITE)),
@@ -92,17 +80,13 @@ public class ItemPaletteTest {
         );
         loadCycle(0, cycle);
 
-        List<ItemStack> result = ItemPalette.getAllCycleItems(new ItemStack(Items.STONE), 0);
+        List<ItemState> result = ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0);
 
-        assertNotNull(result);
-        assertEquals(3, result.size());
-        assertEquals(Items.STONE, result.get(0).getItem());
-        assertEquals(Items.GRANITE, result.get(1).getItem());
-        assertEquals(Items.DIORITE, result.get(2).getItem());
+        assertEquals(cycle, result);
     }
 
     @Test
-    public void testGetAllCycleItems_startsFromGivenItem() {
+    public void testGetCycleEntries_startsFromGivenItem() {
         List<ItemState> cycle = Arrays.asList(
                 new ItemState(new ItemStack(Items.STONE)),
                 new ItemState(new ItemStack(Items.GRANITE)),
@@ -110,13 +94,9 @@ public class ItemPaletteTest {
         );
         loadCycle(0, cycle);
 
-        List<ItemStack> result = ItemPalette.getAllCycleItems(new ItemStack(Items.GRANITE), 0);
+        List<ItemState> result = ItemPalette.getCycleEntries(new ItemStack(Items.GRANITE), 0);
 
-        assertNotNull(result);
-        assertEquals(3, result.size());
-        assertEquals(Items.GRANITE, result.get(0).getItem());
-        assertEquals(Items.DIORITE, result.get(1).getItem());
-        assertEquals(Items.STONE, result.get(2).getItem());
+        assertEquals(List.of(cycle.get(1), cycle.get(2), cycle.get(0)), result);
     }
 
     @Test
@@ -135,11 +115,11 @@ public class ItemPaletteTest {
         groups.add(List.of(cycle1)); // Group 1
         ItemPalette.loadGroups(groups);
 
-        assertTrue(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
-        assertFalse(ItemPalette.canCycle(new ItemStack(Items.STONE), 1));
+        assertNotNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0));
+        assertNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 1));
 
-        assertTrue(ItemPalette.canCycle(new ItemStack(Items.OAK_PLANKS), 1));
-        assertFalse(ItemPalette.canCycle(new ItemStack(Items.OAK_PLANKS), 0));
+        assertNotNull(ItemPalette.getCycleEntries(new ItemStack(Items.OAK_PLANKS), 1));
+        assertNull(ItemPalette.getCycleEntries(new ItemStack(Items.OAK_PLANKS), 0));
     }
 
     @Test
@@ -158,91 +138,15 @@ public class ItemPaletteTest {
     @Test
     public void testClear_removesAllGroups() {
         loadSimpleCycle(0);
-        assertTrue(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
+        assertNotNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0));
 
         ItemPalette.clear();
 
         assertEquals(0, ItemPalette.getGroupCount());
-        assertFalse(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
-    }
-
-    // --- Tests for containsExactItem (no fallback) ---
-
-    @Test
-    public void testContainsExactItem_returnsTrueForExactMatch() {
-        List<ItemState> cycle = Arrays.asList(
-                new ItemState(new ItemStack(Items.STONE)),
-                new ItemState(new ItemStack(Items.GRANITE))
-        );
-        loadCycle(0, cycle);
-
-        assertTrue(ItemPalette.containsExactItem(new ItemStack(Items.STONE), 0));
-        assertTrue(ItemPalette.containsExactItem(new ItemStack(Items.GRANITE), 0));
-    }
-
-    @Test
-    public void testContainsExactItem_returnsFalseForItemWithDifferentComponents() {
-        // Register plain stone
-        List<ItemState> cycle = Arrays.asList(
-                new ItemState(new ItemStack(Items.STONE)),
-                new ItemState(new ItemStack(Items.GRANITE))
-        );
-        loadCycle(0, cycle);
-
-        // Named stone should NOT match (no fallback in containsExactItem)
-        ItemStack namedStone = new ItemStack(Items.STONE);
-        namedStone.set(DataComponents.CUSTOM_NAME, Component.literal("Special Stone"));
-
-        assertFalse(ItemPalette.containsExactItem(namedStone, 0));
-        // But canCycle should still return true due to fallback
-        assertTrue(ItemPalette.canCycle(namedStone, 0));
-    }
-
-    @Test
-    public void testContainsExactItem_returnsFalseForUnregisteredItem() {
-        loadSimpleCycle(0);
-        assertFalse(ItemPalette.containsExactItem(new ItemStack(Items.DIORITE), 0));
-    }
-
-    @Test
-    public void testContainsExactItem_allowsSameItemWithDifferentComponentsInSeparateCycles() {
-        // This tests the use case: plain bow registered, want to add enchanted bow
-        ItemStack namedStone = new ItemStack(Items.STONE);
-        namedStone.set(DataComponents.CUSTOM_NAME, Component.literal("Named Stone"));
-
-        // Plain stone is registered
-        List<ItemState> plainCycle = Arrays.asList(
-                new ItemState(new ItemStack(Items.STONE)),
-                new ItemState(new ItemStack(Items.GRANITE))
-        );
-        loadCycle(0, plainCycle);
-
-        // containsExactItem should return false for named stone (allowing it to be added)
-        assertFalse(ItemPalette.containsExactItem(namedStone, 0));
-        // canCycle returns true due to fallback (for runtime cycling)
-        assertTrue(ItemPalette.canCycle(namedStone, 0));
+        assertNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0));
     }
 
     // --- Tests for two-stage fallback ---
-
-    @Test
-    public void testFallback_plainItemMatchesWhenNoComponents() {
-        // Register plain stone in cycle
-        List<ItemState> cycle = Arrays.asList(
-                new ItemState(new ItemStack(Items.STONE)),
-                new ItemState(new ItemStack(Items.GRANITE))
-        );
-        loadCycle(0, cycle);
-
-        // Query with named stone should fallback to plain stone
-        ItemStack namedStone = new ItemStack(Items.STONE);
-        namedStone.set(DataComponents.CUSTOM_NAME, Component.literal("Special Stone"));
-
-        assertTrue(ItemPalette.canCycle(namedStone, 0));
-        List<ItemStack> result = ItemPalette.getAllCycleItems(namedStone, 0);
-        assertNotNull(result);
-        assertEquals(2, result.size());
-    }
 
     @Test
     public void testExactMatch_prefersComponentMatch() {
@@ -264,41 +168,25 @@ public class ItemPaletteTest {
         ItemPalette.loadGroups(groups);
 
         // Query with named stone should return the named cycle
-        List<ItemStack> result = ItemPalette.getAllCycleItems(namedStone.copy(), 0);
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(Items.DIORITE, result.get(1).getItem());
+        List<ItemState> result = ItemPalette.getCycleEntries(namedStone.copy(), 0);
+        assertEquals(namedCycle, result);
 
         // Query with plain stone should return the plain cycle
-        result = ItemPalette.getAllCycleItems(new ItemStack(Items.STONE), 0);
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(Items.GRANITE, result.get(1).getItem());
+        result = ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0);
+        assertEquals(plainCycle, result);
     }
 
     @Test
-    public void testGetAllCycleItems_returnsNullForInvalidGroupIndex() {
-        loadSimpleCycle(0);
-        assertNull(ItemPalette.getAllCycleItems(new ItemStack(Items.STONE), 1));
-        assertNull(ItemPalette.getAllCycleItems(new ItemStack(Items.STONE), -1));
-    }
-
-    @Test
-    public void testGetAllCycleItems_preservesOriginalStackOnFallback() {
-        // Register plain stone; query with a named stone (fallback match).
-        // The first element must be the original stack, keeping its components,
-        // so the currently held item is displayed as-is.
-        loadSimpleCycle(0);
-
+    public void testGetCycleEntries_returnsNullForDifferentComponentsWithoutBaseCycle() {
         ItemStack namedStone = new ItemStack(Items.STONE);
         namedStone.set(DataComponents.CUSTOM_NAME, Component.literal("Special Stone"));
+        loadCycle(0, List.of(new ItemState(namedStone), new ItemState(new ItemStack(Items.GRANITE))));
 
-        List<ItemStack> result = ItemPalette.getAllCycleItems(namedStone, 0);
+        ItemStack otherStone = new ItemStack(Items.STONE);
+        otherStone.set(DataComponents.CUSTOM_NAME, Component.literal("Other Stone"));
 
-        assertNotNull(result);
-        assertEquals(Component.literal("Special Stone"),
-                result.get(0).get(DataComponents.CUSTOM_NAME));
-        assertNull(result.get(1).get(DataComponents.CUSTOM_NAME));
+        assertNull(ItemPalette.getCycleEntries(otherStone, 0));
+        assertNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0));
     }
 
     @Test
@@ -326,7 +214,7 @@ public class ItemPaletteTest {
         List<ItemState> tooShort = List.of(new ItemState(new ItemStack(Items.STONE)));
         loadCycle(0, tooShort);
 
-        assertFalse(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
+        assertNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0));
     }
 
     @Test
@@ -344,46 +232,14 @@ public class ItemPaletteTest {
         groups.add(Arrays.asList(cycleA, cycleB));
         ItemPalette.loadGroups(groups);
 
-        List<ItemStack> result = ItemPalette.getAllCycleItems(new ItemStack(Items.STONE), 0);
+        List<ItemState> result = ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0);
 
         assertNotNull(result);
-        assertEquals(Items.GRANITE, result.get(1).getItem());
+        assertEquals(new ItemState(new ItemStack(Items.GRANITE)), result.get(1));
         // DIORITE (only in cycleB) must still resolve to cycleB
-        List<ItemStack> dioriteResult = ItemPalette.getAllCycleItems(new ItemStack(Items.DIORITE), 0);
+        List<ItemState> dioriteResult = ItemPalette.getCycleEntries(new ItemStack(Items.DIORITE), 0);
         assertNotNull(dioriteResult);
-        assertEquals(Items.STONE, dioriteResult.get(1).getItem());
-    }
-
-    @Test
-    public void testClearGroup_clearsOnlyTargetGroup() {
-        List<ItemState> cycle0 = Arrays.asList(
-                new ItemState(new ItemStack(Items.STONE)),
-                new ItemState(new ItemStack(Items.GRANITE))
-        );
-        List<ItemState> cycle1 = Arrays.asList(
-                new ItemState(new ItemStack(Items.OAK_PLANKS)),
-                new ItemState(new ItemStack(Items.SPRUCE_PLANKS))
-        );
-        List<List<List<ItemState>>> groups = new ArrayList<>();
-        groups.add(new ArrayList<>(List.of(cycle0)));
-        groups.add(new ArrayList<>(List.of(cycle1)));
-        ItemPalette.loadGroups(groups);
-
-        ItemPalette.clearGroup(0);
-
-        assertFalse(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
-        assertTrue(ItemPalette.canCycle(new ItemStack(Items.OAK_PLANKS), 1));
-        // Raw data used for saving must be cleared as well
-        assertTrue(ItemPalette.getGroupData().get(0).isEmpty());
-        assertFalse(ItemPalette.getGroupData().get(1).isEmpty());
-    }
-
-    @Test
-    public void testClearGroup_ignoresInvalidIndex() {
-        loadSimpleCycle(0);
-        assertDoesNotThrow(() -> ItemPalette.clearGroup(-1));
-        assertDoesNotThrow(() -> ItemPalette.clearGroup(99));
-        assertTrue(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
+        assertEquals(new ItemState(new ItemStack(Items.STONE)), dioriteResult.get(1));
     }
 
     @Test

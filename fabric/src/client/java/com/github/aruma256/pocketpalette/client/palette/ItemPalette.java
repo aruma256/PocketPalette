@@ -35,51 +35,13 @@ public class ItemPalette {
         return GROUP_CACHES.get(groupIndex);
     }
 
-    public static boolean canCycle(ItemStack itemStack, int groupIndex) {
-        Map<ItemState, List<ItemState>> cache = getCache(itemStack, groupIndex);
-        if (cache == null) {
-            return false;
-        }
-        ItemState key = new ItemState(itemStack);
-        // Try exact match first, then fallback without components
-        return cache.containsKey(key) || cache.containsKey(key.withoutComponents());
-    }
-
     /**
-     * Check if an exact item (with its specific components) is already registered.
-     * Unlike canCycle(), this does NOT use fallback search.
-     * Use this for duplicate detection when adding new items.
-     */
-    public static boolean containsExactItem(ItemStack itemStack, int groupIndex) {
-        Map<ItemState, List<ItemState>> cache = getCache(itemStack, groupIndex);
-        return cache != null && cache.containsKey(new ItemState(itemStack));
-    }
-
-    public static List<ItemStack> getAllCycleItems(ItemStack itemStack, int groupIndex) {
-        List<ItemState> entries = getCycleEntries(itemStack, groupIndex);
-        if (entries == null) {
-            return null;
-        }
-
-        List<ItemStack> result = new ArrayList<>();
-
-        // Preserve the actual held stack for display, even when it matched a
-        // componentless palette entry through fallback.
-        result.add(itemStack);
-
-        for (int i = 1; i < entries.size(); i++) {
-            result.add(entries.get(i).toItemStack());
-        }
-
-        return result;
-    }
-
-    /**
-     * Return the configured cycle entries in rotation order. Unlike
-     * {@link #getAllCycleItems(ItemStack, int)}, the first element is the
-     * palette entry that matched the queried stack, not the queried stack
-     * itself. This preserves whether inventory matching should use an exact
-     * component match or a componentless base-item match.
+     * Return the configured cycle entries in rotation order, starting with the
+     * entry matching the queried stack. Exact component matches take priority
+     * over componentless base-item matches. The returned entries retain their
+     * configured components for inventory matching.
+     *
+     * @return the rotated cycle, or null for an invalid stack, group, or no match
      */
     public static List<ItemState> getCycleEntries(ItemStack itemStack, int groupIndex) {
         Map<ItemState, List<ItemState>> cache = getCache(itemStack, groupIndex);
@@ -152,14 +114,5 @@ public class ItemPalette {
     public static void clear() {
         GROUP_CACHES.clear();
         groupData = new ArrayList<>();
-    }
-
-    public static void clearGroup(int groupIndex) {
-        if (groupIndex >= 0 && groupIndex < GROUP_CACHES.size()) {
-            GROUP_CACHES.get(groupIndex).clear();
-        }
-        if (groupIndex >= 0 && groupIndex < groupData.size()) {
-            groupData.get(groupIndex).clear();
-        }
     }
 }

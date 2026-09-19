@@ -64,7 +64,7 @@ public class PaletteConfigManagerTest {
 
         assertTrue(ok, "Warnings: " + PaletteConfigManager.LOG_CONFIG_WARNINGS);
         assertTrue(PaletteConfigManager.LOG_CONFIG_WARNINGS.isEmpty());
-        assertTrue(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
+        assertNotNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0));
     }
 
     @Test
@@ -110,7 +110,7 @@ public class PaletteConfigManagerTest {
         assertTrue(PaletteConfigManager.applyGroupDataAndSave());
 
         // Palette is updated in memory
-        assertTrue(ItemPalette.canCycle(new ItemStack(Items.STONE), 0));
+        assertNotNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0));
         // ... and persisted to disk
         ItemGroupsConfigLoader.LoadResult saved = ItemGroupsConfigLoader.load(tempDir);
         assertEquals(1, saved.getGroups().get(0).size());
@@ -175,7 +175,7 @@ public class PaletteConfigManagerTest {
         Files.createDirectory(file);
         Files.writeString(file.resolve("obstruction"), "keep");
         assertFalse(PaletteConfigManager.commitAndSave(editor));
-        assertTrue(ItemPalette.canCycle(new ItemStack(Items.DIORITE), 0));
+        assertNotNull(ItemPalette.getCycleEntries(new ItemStack(Items.DIORITE), 0));
         var reopened = new PaletteEditModel(ItemPalette.getGroupData(), new ItemStack(Items.STONE));
         assertFalse(PaletteConfigManager.commitAndSave(reopened));
         assertEquals("keep", Files.readString(file.resolve("obstruction")));
