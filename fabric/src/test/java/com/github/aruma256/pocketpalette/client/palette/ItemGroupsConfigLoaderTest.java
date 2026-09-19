@@ -9,21 +9,71 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.github.aruma256.pocketpalette.MinecraftBootstrapExtension;
+import com.google.gson.JsonParser;
 
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.CustomData;
 
 @ExtendWith(MinecraftBootstrapExtension.class)
 public class ItemGroupsConfigLoaderTest {
 
     @TempDir
     File tempDir;
+
+    // Small numbers must keep their declared types, even when a byte could hold them.
+    private static final String TYPED_CUSTOM_DATA = """
+            {byte:1b,short:2s,int:123,long:4L,float:5.0f,double:6.0d,
+             bytes:[B;1b,2b],ints:[I;1,2,3],longs:[L;1L,2L],
+             nested:{values:[1,2,3]},emptyInts:[I;]}
+            """;
+
+    @Test
+    public void testLoad_preservesCustomDataNbtTypes() throws Exception {
+        writeConfigFile("""
+                {"config_version":1,"groups":[[[
+                  {"id":"minecraft:stone","components":"{'minecraft:custom_data':%s}"},
+                  {"id":"minecraft:granite"}
+                ]]]}
+                """.formatted(TYPED_CUSTOM_DATA.replace("\n", "")));
+
+        var result = ItemGroupsConfigLoader.load(tempDir);
+        assertTrue(result.getWarnings().isEmpty(), result.getWarnings().toString());
+        ItemStack expected = new ItemStack(Items.STONE);
+        expected.set(DataComponents.CUSTOM_DATA, CustomData.of(TagParser.parseCompoundFully(TYPED_CUSTOM_DATA)));
+        assertEquals(new ItemState(expected), result.getGroups().getFirst().getFirst().getFirst());
+    }
+
+    @Test
+    public void testSaveAndLoad_preservesCustomDataNbtTypes() throws Exception {
+        CompoundTag data = TagParser.parseCompoundFully(TYPED_CUSTOM_DATA);
+        ItemStack stack = new ItemStack(Items.STONE);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
+        ItemState expected = new ItemState(stack);
+        var groups = List.of(List.of(List.of(expected, new ItemState(new ItemStack(Items.GRANITE)))));
+
+        assertTrue(ItemGroupsConfigLoader.save(tempDir, groups));
+        // Inspect the file separately: reciprocal conversion bugs must not pass a round trip.
+        var root = JsonParser.parseString(Files.readString(
+                new File(tempDir, ItemGroupsConfigLoader.CONFIG_FILE_NAME).toPath())).getAsJsonObject();
+        String components = root.getAsJsonArray("groups").get(0).getAsJsonArray()
+                .get(0).getAsJsonArray().get(0).getAsJsonObject().get("components").getAsString();
+        CompoundTag savedPatch = TagParser.parseCompoundFully(components);
+        assertEquals(data, savedPatch.get("minecraft:custom_data"));
+
+        var result = ItemGroupsConfigLoader.load(tempDir);
+        assertTrue(result.getWarnings().isEmpty(), result.getWarnings().toString());
+        assertEquals(expected, result.getGroups().getFirst().getFirst().getFirst());
+    }
 
     @Test
     public void testConfigExists_returnsFalseWhenNoFile() {

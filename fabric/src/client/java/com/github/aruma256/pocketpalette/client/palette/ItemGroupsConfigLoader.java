@@ -22,7 +22,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.mojang.serialization.JsonOps;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
@@ -63,8 +62,9 @@ public class ItemGroupsConfigLoader {
      * Create RegistryOps backed by the client's registry access, so that
      * data-driven registries (e.g. enchantments) resolve when available.
      */
-    private static RegistryOps<JsonElement> createRegistryOps() {
-        return RegistryOps.create(JsonOps.INSTANCE, getRegistryAccess());
+    private static RegistryOps<Tag> createRegistryOps() {
+        // Components contain typed NBT (e.g. custom_data); a JSON intermediate loses those types.
+        return RegistryOps.create(NbtOps.INSTANCE, getRegistryAccess());
     }
 
     public static class LoadResult {
@@ -214,8 +214,7 @@ public class ItemGroupsConfigLoader {
             String componentsStr = itemObj.get("components").getAsString();
             try {
                 CompoundTag nbt = TagParser.parseCompoundFully(componentsStr);
-                JsonElement json = NbtOps.INSTANCE.convertTo(JsonOps.INSTANCE, nbt);
-                DataComponentPatch patch = DataComponentPatch.CODEC.parse(createRegistryOps(), json).getOrThrow();
+                DataComponentPatch patch = DataComponentPatch.CODEC.parse(createRegistryOps(), nbt).getOrThrow();
                 itemStack.applyComponents(patch);
             } catch (Exception e) {
                 warnings.add(String.format("Failed to parse components for '%s': %s (%s)",
@@ -298,10 +297,7 @@ public class ItemGroupsConfigLoader {
         if (itemState.hasComponents()) {
             try {
                 DataComponentPatch patch = stack.getComponentsPatch();
-                JsonElement encoded = DataComponentPatch.CODEC.encodeStart(createRegistryOps(), patch).getOrThrow();
-
-                // Convert JSON to SNBT-like string
-                Tag nbt = JsonOps.INSTANCE.convertTo(NbtOps.INSTANCE, encoded);
+                Tag nbt = DataComponentPatch.CODEC.encodeStart(createRegistryOps(), patch).getOrThrow();
                 obj.addProperty("components", nbt.toString());
             } catch (Exception e) {
                 throw new IllegalStateException("Failed to serialize components for " + id, e);
