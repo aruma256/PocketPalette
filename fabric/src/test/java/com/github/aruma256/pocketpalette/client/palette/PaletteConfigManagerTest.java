@@ -161,6 +161,79 @@ public class PaletteConfigManagerTest {
     }
 
     @Test
+    public void unchangedEditorRetriesFailedSaveUntilItSucceeds() throws IOException {
+        var file = new File(tempDir, ItemGroupsConfigLoader.CONFIG_FILE_NAME).toPath();
+        String original = """
+            {"config_version":1,"groups":[[[{"id":"minecraft:stone"},{"id":"minecraft:granite"}]]]}
+            """;
+        Files.writeString(file, original);
+        assertTrue(PaletteConfigManager.loadAllFromFile());
+        var editor = new PaletteEditModel(ItemPalette.getGroupData(), new ItemStack(Items.STONE));
+        assertEquals(PaletteEditModel.AddResult.ADDED, editor.add(0, new ItemStack(Items.DIORITE)));
+
+        Files.delete(file);
+        Files.createDirectory(file);
+        Files.writeString(file.resolve("obstruction"), "keep");
+        assertFalse(PaletteConfigManager.commitAndSave(editor));
+        assertTrue(ItemPalette.canCycle(new ItemStack(Items.DIORITE), 0));
+        var reopened = new PaletteEditModel(ItemPalette.getGroupData(), new ItemStack(Items.STONE));
+        assertFalse(PaletteConfigManager.commitAndSave(reopened));
+        assertEquals("keep", Files.readString(file.resolve("obstruction")));
+
+        Files.delete(file.resolve("obstruction"));
+        Files.delete(file);
+        Files.writeString(file, original);
+        assertTrue(PaletteConfigManager.commitAndSave(reopened));
+        var saved = ItemGroupsConfigLoader.load(tempDir);
+        assertTrue(saved.getWarnings().isEmpty());
+        assertEquals(3, saved.getGroups().getFirst().getFirst().size());
+
+        // After a successful retry, an untouched editor must not write again.
+        Files.writeString(file, "external change");
+        assertTrue(PaletteConfigManager.commitAndSave(
+                new PaletteEditModel(ItemPalette.getGroupData(), new ItemStack(Items.STONE))));
+        assertEquals("external change", Files.readString(file));
+    }
+
+    @Test
+    public void successfulReloadClearsPendingSave() throws IOException {
+        assertTrue(PaletteConfigManager.loadAllFromFile());
+        var file = new File(tempDir, ItemGroupsConfigLoader.CONFIG_FILE_NAME).toPath();
+        Files.delete(file);
+        Files.createDirectory(file);
+        Files.writeString(file.resolve("obstruction"), "keep");
+        assertFalse(PaletteConfigManager.applyGroupDataAndSave());
+        Files.delete(file.resolve("obstruction"));
+        Files.delete(file);
+        assertTrue(PaletteConfigManager.loadAllFromFile());
+        Files.writeString(file, "external change");
+        assertTrue(PaletteConfigManager.commitAndSave(
+                new PaletteEditModel(ItemPalette.getGroupData(), new ItemStack(Items.STONE))));
+        assertEquals("external change", Files.readString(file));
+    }
+
+    @Test
+    public void failedReloadBlocksPendingSaveAndEditorCommit() throws IOException {
+        assertTrue(PaletteConfigManager.loadAllFromFile());
+        var file = new File(tempDir, ItemGroupsConfigLoader.CONFIG_FILE_NAME).toPath();
+        Files.delete(file);
+        Files.createDirectory(file);
+        Files.writeString(file.resolve("obstruction"), "keep");
+        assertFalse(PaletteConfigManager.applyGroupDataAndSave());
+        Files.delete(file.resolve("obstruction"));
+        Files.delete(file);
+        Files.writeString(file, "broken json");
+        var editor = new PaletteEditModel(ItemPalette.getGroupData(), new ItemStack(Items.STONE));
+        var originalCycle = List.copyOf(editor.getCycle(0));
+        assertTrue(editor.remove(0, 0));
+        assertFalse(PaletteConfigManager.loadAllFromFile());
+        assertFalse(PaletteConfigManager.commitAndSave(editor));
+        assertEquals(originalCycle, new PaletteEditModel(
+                ItemPalette.getGroupData(), new ItemStack(Items.STONE)).getCycle(0));
+        assertEquals("broken json", Files.readString(file));
+    }
+
+    @Test
     public void saveIoFailureIsReportedWithoutBlockingEditing() throws IOException {
         assertTrue(PaletteConfigManager.loadAllFromFile());
         var file = new File(tempDir, ItemGroupsConfigLoader.CONFIG_FILE_NAME).toPath();

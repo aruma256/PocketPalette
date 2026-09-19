@@ -16,6 +16,7 @@ public class PaletteConfigManager {
     private static File configDir = new File("config");
     // Only a complete, warning-free load permits overwriting the source config.
     private static boolean editingAllowed;
+    private static boolean savePending;
 
     public static boolean isEditingAllowed() {
         return editingAllowed;
@@ -27,6 +28,7 @@ public class PaletteConfigManager {
     static void setConfigDir(File dir) {
         configDir = dir;
         editingAllowed = false;
+        savePending = false;
     }
 
     public static boolean loadAllFromFile() {
@@ -47,6 +49,7 @@ public class PaletteConfigManager {
         editingAllowed = result.getWarnings().isEmpty();
         if (editingAllowed) {
             ItemPalette.loadGroups(result.getGroups());
+            savePending = false;
         }
         return editingAllowed;
     }
@@ -77,7 +80,20 @@ public class PaletteConfigManager {
             return false;
         }
         List<List<List<ItemState>>> groupData = ItemPalette.getGroupData();
-        return ItemGroupsConfigLoader.save(configDir, groupData);
+        boolean saved = ItemGroupsConfigLoader.save(configDir, groupData);
+        savePending = !saved;
+        return saved;
+    }
+
+    /** Commit an editor session, retrying any previous failed save even without new edits. */
+    public static boolean commitAndSave(PaletteEditModel model) {
+        if (!editingAllowed) {
+            return false;
+        }
+        if (model.commit()) {
+            return applyGroupDataAndSave();
+        }
+        return !savePending || saveAllToFile();
     }
 
     /**

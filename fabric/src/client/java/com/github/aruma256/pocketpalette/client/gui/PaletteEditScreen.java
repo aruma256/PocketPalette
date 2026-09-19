@@ -285,10 +285,8 @@ public class PaletteEditScreen extends Screen {
 				discarded = true;
 			}
 		}
-		if (model.commit()) {
-			if (!PaletteConfigManager.applyGroupDataAndSave()) {
-				PocketPaletteClient.showConfigError("pocketpalette.config.save_failed");
-			}
+		if (!PaletteConfigManager.commitAndSave(model)) {
+			PocketPaletteClient.showConfigError("pocketpalette.config.save_failed");
 		}
 		if (discarded) {
 			this.minecraft.getChatListener().handleSystemMessage(
