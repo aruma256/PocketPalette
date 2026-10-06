@@ -22,6 +22,9 @@ import net.minecraft.world.item.ItemStack;
 @Environment(EnvType.CLIENT)
 public class PaletteKey extends KeyBase {
 
+	// Vanilla raises the selected item name by 14 GUI pixels when the Survival HUD is shown.
+	private static final int SURVIVAL_HUD_OFFSET = 14;
+
 	/**
 	 * One ring entry = one physical inventory stack. {@code slot} tracks
 	 * where the stack currently sits; swaps exchange the slot values of the
@@ -241,7 +244,7 @@ public class PaletteKey extends KeyBase {
 		Minecraft mc = Minecraft.getInstance();
 		int x = mc.getWindow().getGuiScaledWidth() / 2 - 90 + mc.player.getInventory().getSelectedSlot() * 20 + 2;
 		int y = mc.getWindow().getGuiScaledHeight() - 16 - 3;
-		y -= 50 + (20 + candidates.size());
+		y -= 50 + (20 + candidates.size()) + SURVIVAL_HUD_OFFSET;
 		List<ItemStack> stacks = candidates.stream().map(candidate -> candidate.stack).toList();
 		ItemStackRenderer.renderItemStacks(guiGraphics, stacks, x, y, pressTime, partialTicks, lastRotateTime, rotateDirection);
 	}
