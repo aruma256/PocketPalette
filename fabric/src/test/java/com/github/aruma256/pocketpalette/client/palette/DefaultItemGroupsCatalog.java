@@ -153,7 +153,7 @@ public final class DefaultItemGroupsCatalog {
         cycles.add(coralCycle("_coral"));                                          // D10
         cycles.add(coralCycle("_coral_fan"));                                      // D11
         cycles.add(List.of("sponge", "wet_sponge"));                               // D12
-        cycles.add(List.of("torch", "soul_torch"));                                // D13
+        cycles.add(List.of("torch", "soul_torch", "copper_torch"));                // D13
         cycles.add(List.of("lantern", "soul_lantern"));                            // D14
         cycles.add(List.of("campfire", "soul_campfire"));                          // D15
         cycles.add(List.of("ochre_froglight", "verdant_froglight", "pearlescent_froglight")); // D16
@@ -211,7 +211,7 @@ public final class DefaultItemGroupsCatalog {
     // 所持品フィルタにより実際に持っているティアの道具だけが候補に出る
     private static List<String> toolCycle() {
         List<String> ids = new ArrayList<>();
-        for (String tier : List.of("wooden", "stone", "iron", "golden", "diamond", "netherite")) {
+        for (String tier : List.of("wooden", "stone", "copper", "iron", "golden", "diamond", "netherite")) {
             for (String tool : List.of("pickaxe", "shovel", "axe", "hoe")) {
                 ids.add(tier + "_" + tool);
             }

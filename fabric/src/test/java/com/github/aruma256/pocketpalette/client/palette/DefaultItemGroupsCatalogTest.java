@@ -71,7 +71,12 @@ class DefaultItemGroupsCatalogTest {
             Map.entry("_coral_fan", Set.of()),
             Map.entry("_pillar", Set.of()),
             Map.entry("_torch", Set.of("redstone_torch")),
-            Map.entry("_lantern", Set.of("sea_lantern")),
+            // 1.21.9 の銅ランタンは今回の採用対象外（docs/default-item-groups-catalog.md）。
+            Map.entry("_lantern", Set.of(
+                    "sea_lantern", "copper_lantern", "exposed_copper_lantern",
+                    "weathered_copper_lantern", "oxidized_copper_lantern",
+                    "waxed_copper_lantern", "waxed_exposed_copper_lantern",
+                    "waxed_weathered_copper_lantern", "waxed_oxidized_copper_lantern")),
             Map.entry("_pickaxe", Set.of()),
             Map.entry("_shovel", Set.of()),
             Map.entry("_axe", Set.of()),

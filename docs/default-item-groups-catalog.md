@@ -1,4 +1,4 @@
-# Default Item Groups カタログ（Minecraft 1.21.8）
+# Default Item Groups カタログ（Minecraft 1.21.9）
 
 PocketPalette が同梱する default config の全サイクルと、収録・並び順の設計方針。
 
@@ -90,7 +90,7 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 | D10 | サンゴ | 同上 | 10 |
 | D11 | サンゴのうちわ | 同上 | 10 |
 | D12 | スポンジ | `sponge, wet_sponge` | 2 |
-| D13 | たいまつ | `torch, soul_torch` | 2 |
+| D13 | たいまつ | `torch, soul_torch, copper_torch` | 3 |
 | D14 | ランタン | `lantern, soul_lantern` | 2 |
 | D15 | 焚き火 | `campfire, soul_campfire` | 2 |
 | D16 | フロッグライト | `ochre_froglight, verdant_froglight, pearlescent_froglight` | 3 |
@@ -114,12 +114,19 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 | # | サイクル | 内容 | 数 |
 |---|---------|------|----|
 | E1 | 食料 | カテゴリ順（肉→魚→主食・菓子→野菜・果物→スープ→特殊）、生→焼きペア。`rotten_flesh` は収録。その他の有害系（`spider_eye, poisonous_potato, pufferfish, chicken`）・components 持ち（`suspicious_stew` 等）・`chorus_fruit` は除外 | 35 |
-| E2 | 道具セット | 素材（`wooden, stone, iron, golden, diamond, netherite`）ごとに `pickaxe, shovel, axe, hoe`。エンチャ・耐久値は base-item フォールバック + スタック丸ごとスワップで保持される | 24 |
+| E2 | 道具セット | 素材（`wooden, stone, copper, iron, golden, diamond, netherite`）ごとに `pickaxe, shovel, axe, hoe`。エンチャ・耐久値は base-item フォールバック + スタック丸ごとスワップで保持される | 28 |
 | E3 | レール・トロッコ | `rail, powered_rail, detector_rail, activator_rail, minecart, chest_minecart, furnace_minecart, tnt_minecart, hopper_minecart` | 9 |
 | E4 | バケツ | `bucket, water_bucket, lava_bucket, milk_bucket, powder_snow_bucket` | 5 |
 
 - E3: `command_block_minecart` はサバイバル入手不可のため除外。
 - E4: 生物入りバケツは生物運搬という別用途のため除外。
+
+## Minecraft 1.21.9 の追加方針
+
+- 採用: `copper_torch` を D13 に、銅の `pickaxe, shovel, axe, hoe` を E2 の石と鉄の間に追加する。
+- 今回は見送り: 銅の鉄格子・鎖・ランタン・銅ゴーレム像（酸化段階・waxed 版を含む）。C16/C17 と D14 の構成は維持する。
+- 棚・銅チェスト・避雷針の酸化バリエーションも今回の採用対象外。武器・防具・スポーンエッグ・銅塊は既存方針に従い収録しない。
+- 銅ランタン8種は、カタログ網羅性テストの `_lantern` の意図的な除外に明記する。
 
 ## 不採用の方針
 
