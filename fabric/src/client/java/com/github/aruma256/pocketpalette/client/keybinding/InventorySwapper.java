@@ -42,8 +42,7 @@ public final class InventorySwapper {
 		return findMatchingSlots(inventory::getItem, inventory.getSelectedSlot(), entry);
 	}
 
-	// Visible for testing: same contract as findSlotsMatchingPaletteEntry, but reads slots
-	// through a function so no Player/Inventory instance is required
+	// Used by palette sessions and tests without requiring a Player/Inventory instance.
 	static List<Integer> findMatchingSlots(IntFunction<ItemStack> slotGetter, int selectedSlot, ItemState entry) {
 		ItemStack target = entry.toItemStack();
 		if (!entry.hasComponents()) {

@@ -1,10 +1,6 @@
 package com.github.aruma256.pocketpalette.client.keybinding;
 
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import com.github.aruma256.pocketpalette.PocketPalette;
 import com.github.aruma256.pocketpalette.client.palette.ItemPalette;
@@ -25,31 +21,13 @@ public class PaletteKey extends KeyBase {
 	// Vanilla raises the selected item name by 14 GUI pixels when the Survival HUD is shown.
 	private static final int SURVIVAL_HUD_OFFSET = 14;
 
-	/**
-	 * One ring entry = one physical inventory stack. {@code slot} tracks
-	 * where the stack currently sits; swaps exchange the slot values of the
-	 * two candidates involved, so the ring stays consistent while rotating.
-	 */
-	static final class Candidate {
-		final ItemStack stack;
-		int slot;
-
-		Candidate(ItemStack stack, int slot) {
-			this.stack = stack;
-			this.slot = slot;
-		}
-	}
-
-	protected final Deque<Candidate> candidates = new LinkedList<>();
+	private final PaletteSession session = new PaletteSession();
 	protected int lastRotateTime = -1;
 	protected byte rotateDirection = 0;
 
 	// Revalidated before scrolling, since number keys can change the selected slot.
-	private Candidate handCandidate;
 	private LocalPlayer observedPlayer;
-	private int observedSelectedSlot = -1;
 	private boolean observedSpectator;
-	private final ItemStack[] inventorySnapshot = new ItemStack[Inventory.INVENTORY_SIZE];
 
 	private int phase = 0;
 
@@ -87,64 +65,22 @@ public class PaletteKey extends KeyBase {
 		this.pressTime = 1;
 		this.lastRotateTime = 0;
 		this.rotateDirection = 0;
-		candidates.clear();
-		handCandidate = null;
-		Minecraft mc = Minecraft.getInstance();
-		rememberInventory();
-		if (mc.player == null || mc.player.isSpectator()) {
+		session.clear();
+		observedPlayer = Minecraft.getInstance().player;
+		if (observedPlayer == null) {
 			return;
 		}
-		Inventory inventory = mc.player.getInventory();
-		ItemStack itemStack = inventory.getSelectedItem();
-		if (itemStack.isEmpty()) {
-			return;
-		}
-		List<ItemState> entries = ItemPalette.getCycleEntries(itemStack, getGroupIndex());
-		if (entries == null || entries.isEmpty()) {
-			return;
-		}
-		// Unlike Creative-based palettes, we cannot conjure items out of thin
-		// air — the ring offers the actual inventory stacks, one candidate per
-		// stack, in cycle order. The held stack always leads; other stacks of
-		// the same item follow it, ordered by count ascending, then remaining
-		// durability ascending, so smaller stacks and worn tools come first.
-		candidates.add(new Candidate(itemStack.copy(), inventory.getSelectedSlot()));
-		Set<Integer> claimedSlots = new HashSet<>();
-		for (ItemState entry : entries) {
-			for (int slot : InventorySwapper.findSlotsMatchingPaletteEntry(mc.player, entry)) {
-				// A slot may match more than one cycle entry (base-item
-				// fallback); each physical stack appears only once
-				if (!claimedSlots.add(slot)) {
-					continue;
-				}
-				candidates.add(new Candidate(inventory.getItem(slot).copy(), slot));
-			}
-		}
-		if (candidates.size() <= 1) {
-			candidates.clear();
-			return;
-		}
-		handCandidate = candidates.getFirst();
+		observedSpectator = observedPlayer.isSpectator();
+		Inventory inventory = observedPlayer.getInventory();
+		List<ItemState> entries = observedSpectator ? null
+				: ItemPalette.getCycleEntries(inventory.getSelectedItem(), getGroupIndex());
+		session.rebuild(inventory::getItem, inventory.getSelectedSlot(), entries);
 	}
 
 	@Override
 	protected void onKeyReleased() {
-		candidates.clear();
-		handCandidate = null;
+		session.clear();
 		observedPlayer = null;
-		observedSelectedSlot = -1;
-		java.util.Arrays.fill(inventorySnapshot, null);
-	}
-
-	private void rememberInventory() {
-		observedPlayer = Minecraft.getInstance().player;
-		if (observedPlayer == null) return;
-		Inventory inventory = observedPlayer.getInventory();
-		observedSelectedSlot = inventory.getSelectedSlot();
-		observedSpectator = observedPlayer.isSpectator();
-		for (int slot = 0; slot < inventorySnapshot.length; slot++) {
-			inventorySnapshot[slot] = inventory.getItem(slot).copy();
-		}
 	}
 
 	private void refreshCandidatesIfChanged() {
@@ -155,17 +91,9 @@ public class PaletteKey extends KeyBase {
 		}
 		if (player == null) return;
 		Inventory inventory = player.getInventory();
-		if (inventory.getSelectedSlot() != observedSelectedSlot || player.isSpectator() != observedSpectator) {
+		if (player.isSpectator() != observedSpectator
+				|| session.hasInventoryChanged(inventory::getItem, inventory.getSelectedSlot())) {
 			rebuildCandidates();
-			return;
-		}
-		// Compare all 36 slots, including non-candidates: commands, pickups and
-		// consumption can add candidates as well as change or remove them.
-		for (int slot = 0; slot < inventorySnapshot.length; slot++) {
-			if (!ItemStack.matches(inventorySnapshot[slot], inventory.getItem(slot))) {
-				rebuildCandidates();
-				return;
-			}
 		}
 	}
 
@@ -175,13 +103,13 @@ public class PaletteKey extends KeyBase {
 	}
 
 	protected void rotateCandidatesForward() {
-		candidates.addFirst(candidates.pollLast());
+		session.rotateForward();
 		this.lastRotateTime = this.pressTime;
 		this.rotateDirection = 1;
 	}
 
 	protected void rotateCandidatesBackward() {
-		candidates.addLast(candidates.pollFirst());
+		session.rotateBackward();
 		this.lastRotateTime = this.pressTime;
 		this.rotateDirection = -1;
 	}
@@ -191,26 +119,7 @@ public class PaletteKey extends KeyBase {
 		if (mc.player == null) {
 			return;
 		}
-		Candidate target = candidates.getFirst();
-		if (target == handCandidate) {
-			return; // rotated back to the stack already in hand
-		}
-		ItemStack inSlot = mc.player.getInventory().getItem(target.slot);
-		if (!ItemStack.isSameItemSameComponents(inSlot, target.stack)) {
-			return; // the stack moved or was consumed since the key was pressed
-		}
-		if (!InventorySwapper.swapWithSelected(target.slot)) {
-			return;
-		}
-		// The stacks traded places: the previous hand stack now sits in the
-		// target's old slot, and the target is in the selected hotbar slot
-		int targetSlot = target.slot;
-		target.slot = handCandidate.slot;
-		handCandidate.slot = targetSlot;
-		handCandidate = target;
-		// The locally predicted SWAP is our own change; keep its ring order.
-		// A later server correction will still differ from this snapshot.
-		rememberInventory();
+		session.swapToFirstCandidate(mc.player.getInventory()::getItem, InventorySwapper::swapWithSelected);
 	}
 
 	/** Returns whether palette input consumes the scroll, even without candidates. */
@@ -220,7 +129,7 @@ public class PaletteKey extends KeyBase {
 		}
 		// Input callbacks can arrive between ticks, so validate here too.
 		refreshCandidatesIfChanged();
-		if (candidates.isEmpty()) {
+		if (session.isEmpty()) {
 			return true;
 		}
 		if (wheel > 0) {
@@ -234,18 +143,17 @@ public class PaletteKey extends KeyBase {
 
 	public void onRenderHotbar(GuiGraphics guiGraphics, float partialTicks) {
 		if (this.pressTime == 0) {
-			candidates.clear();
-			handCandidate = null;
+			session.clear();
 			return;
 		}
-		if (candidates.isEmpty()) {
+		if (session.isEmpty()) {
 			return;
 		}
 		Minecraft mc = Minecraft.getInstance();
 		int x = mc.getWindow().getGuiScaledWidth() / 2 - 90 + mc.player.getInventory().getSelectedSlot() * 20 + 2;
 		int y = mc.getWindow().getGuiScaledHeight() - 16 - 3;
-		y -= 50 + (20 + candidates.size()) + SURVIVAL_HUD_OFFSET;
-		List<ItemStack> stacks = candidates.stream().map(candidate -> candidate.stack).toList();
+		y -= 50 + (20 + session.size()) + SURVIVAL_HUD_OFFSET;
+		List<ItemStack> stacks = session.getStacks();
 		ItemStackRenderer.renderItemStacks(guiGraphics, stacks, x, y, pressTime, partialTicks, lastRotateTime, rotateDirection);
 	}
 
