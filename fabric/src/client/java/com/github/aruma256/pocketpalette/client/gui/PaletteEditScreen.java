@@ -15,6 +15,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -207,13 +209,15 @@ public class PaletteEditScreen extends Screen {
 	}
 
 	@Override
-	public boolean mouseClicked(double mouseX, double mouseY, int button) {
-		if (super.mouseClicked(mouseX, mouseY, button)) {
+	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+		if (super.mouseClicked(event, doubleClick)) {
 			return true;
 		}
-		if (button != 0) {
+		if (event.button() != 0) {
 			return false;
 		}
+		double mouseX = event.x();
+		double mouseY = event.y();
 		for (int i = 0; i < INV_COLUMNS * INV_ROWS + INV_COLUMNS; i++) {
 			int x = slotX(i);
 			int y = slotY(i);
@@ -263,13 +267,13 @@ public class PaletteEditScreen extends Screen {
 	}
 
 	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+	public boolean keyPressed(KeyEvent event) {
 		// Let the inventory key close the editor, like a container screen
-		if (this.minecraft.options.keyInventory.matches(keyCode, scanCode)) {
+		if (this.minecraft.options.keyInventory.matches(event)) {
 			onClose();
 			return true;
 		}
-		return super.keyPressed(keyCode, scanCode, modifiers);
+		return super.keyPressed(event);
 	}
 
 	@Override

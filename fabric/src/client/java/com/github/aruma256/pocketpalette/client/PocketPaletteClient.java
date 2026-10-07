@@ -2,6 +2,7 @@ package com.github.aruma256.pocketpalette.client;
 
 import org.lwjgl.glfw.GLFW;
 
+import com.github.aruma256.pocketpalette.PocketPalette;
 import com.github.aruma256.pocketpalette.client.gui.PaletteEditorOpener;
 import com.github.aruma256.pocketpalette.client.keybinding.PaletteKey;
 import com.github.aruma256.pocketpalette.client.palette.PaletteConfigManager;
@@ -15,15 +16,18 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 @Environment(EnvType.CLIENT)
 public class PocketPaletteClient implements ClientModInitializer, ClientPlayConnectionEvents.Join {
 
-	public static final String KEY_CATEGORY = "key.category.pocketpalette";
+	public static final KeyMapping.Category KEY_CATEGORY = KeyMapping.Category.register(
+			ResourceLocation.fromNamespaceAndPath(PocketPalette.MODID, "main"));
 
 	private static final PaletteKey PALETTE_KEY = new PaletteKey(GLFW.GLFW_KEY_R, KEY_CATEGORY);
 

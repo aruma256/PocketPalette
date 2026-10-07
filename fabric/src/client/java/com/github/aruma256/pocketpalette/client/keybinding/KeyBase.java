@@ -13,7 +13,7 @@ public class KeyBase extends KeyMapping implements ClientTickEvents.EndTick {
 	protected int doubleTapTick = 0;
 	private static final int DOUBLE_TAP_MAX = 5;
 
-	public KeyBase(String description, int keyCode, String category) {
+	public KeyBase(String description, int keyCode, Category category) {
 		super(description, keyCode, category);
 	}
 

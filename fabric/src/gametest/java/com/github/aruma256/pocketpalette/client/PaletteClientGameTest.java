@@ -122,7 +122,38 @@ public class PaletteClientGameTest implements FabricClientGameTest {
                 client.setScreen(null);
             });
         }
+        // Exercise the editor's MouseButtonEvent and KeyEvent handlers, not just opening it.
+        context.runOnClient(client -> client.setScreen(new InventoryScreen(client.player)));
+        moveCursor(context, (context.computeOnClient(client -> client.screen.width) - 176) / 2 + 16,
+                (context.computeOnClient(client -> client.screen.height) - 166) / 2 + 92);
+        context.waitFor(client -> ((AbstractContainerScreenAccessor) client.screen)
+                .pocketpalette$getHoveredSlot() == client.player.inventoryMenu.getSlot(9));
+        context.getInput().pressKey(originalKey);
+        context.waitFor(client -> client.screen instanceof PaletteEditScreen);
+        int left = context.computeOnClient(client -> (client.screen.width - 176) / 2);
+        int top = context.computeOnClient(client -> Math.max(8, (client.screen.height - 222) / 2));
+        // Group 2 is empty in the default config; add the hotbar stone to the andesite seed.
+        moveCursor(context, left + 40, top + 22);
+        context.getInput().pressMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
+        moveCursor(context, left + 16, top + 189);
+        context.getInput().pressMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
+        context.getInput().pressKey(GLFW.GLFW_KEY_E);
+        context.waitFor(client -> client.screen == null);
+        context.runOnClient(client -> {
+            List<ItemState> cycle = ItemPalette.getCycleEntries(new ItemStack(Items.ANDESITE), 1);
+            if (cycle == null || cycle.size() != 2
+                    || !cycle.get(1).toItemStack().is(Items.STONE)) {
+                throw new AssertionError("Editor click did not append the inventory item and save on E");
+            }
+        });
+        awaitSlots(context, world, 0, Map.of(0, stone, 9, andesite));
         PocketPalette.LOGGER.info("Client game test passed: keyboard and mouse editor bindings consume input");
+    }
+
+    private static void moveCursor(ClientGameTestContext context, int guiX, int guiY) {
+        double scale = context.computeOnClient(client -> client.getWindow().getGuiScale());
+        context.getInput().setCursorPos(guiX * scale, guiY * scale);
+        context.waitTick();
     }
 
     private static void testInventoryChangesWhileHeld(ClientGameTestContext context,

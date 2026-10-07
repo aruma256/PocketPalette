@@ -22,7 +22,7 @@ public class KeyBaseTest {
         int doubleTapTickAtPressStart = -1;
 
         TestKey() {
-            super("key.pocketpalette.test" + (keyCounter++), 82, "key.categories.test");
+            super("key.pocketpalette.test" + (keyCounter++), 82, Category.MISC);
         }
 
         @Override

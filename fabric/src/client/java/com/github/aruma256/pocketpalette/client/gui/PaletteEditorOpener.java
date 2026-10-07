@@ -36,9 +36,9 @@ public final class PaletteEditorOpener {
 			}
 			// Consume the editor input before the container can move or drop the hovered item.
 			ScreenKeyboardEvents.allowKeyPress(screen).register(
-					(s, key, scancode, modifiers) -> !editorKey.matches(key, scancode) || !tryOpen(client, s));
+					(s, event) -> !editorKey.matches(event) || !tryOpen(client, s));
 			ScreenMouseEvents.allowMouseClick(screen).register(
-					(s, mouseX, mouseY, button) -> !editorKey.matchesMouse(button) || !tryOpen(client, s));
+					(s, event) -> !editorKey.matchesMouse(event) || !tryOpen(client, s));
 		});
 	}
 

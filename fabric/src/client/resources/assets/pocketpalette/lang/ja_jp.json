@@ -1,5 +1,5 @@
 {
-  "key.category.pocketpalette": "PocketPalette",
+  "key.category.pocketpalette.main": "PocketPalette",
   "key.pocketpalette.palette": "パレット",
   "pocketpalette.editor.title": "パレットエディタ",
   "pocketpalette.editor.group": "グループ %s",

@@ -31,7 +31,7 @@ public class PaletteKey extends KeyBase {
 
 	private int phase = 0;
 
-	public PaletteKey(int keyCode, String category) {
+	public PaletteKey(int keyCode, Category category) {
 		super("key.pocketpalette.palette", keyCode, category);
 	}
 
