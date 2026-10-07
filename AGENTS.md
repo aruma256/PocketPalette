@@ -34,6 +34,15 @@ Default config（`assets/pocketpalette/default-item-groups.json`）は手編集�
 
 Fabric uses Java 21（Minecraft 1.21.8 の要件）、official Mojang mappings を使用。
 
+# Minecraft バージョンアップ手順
+
+1. 対象バージョンのブランチ `mc<version>`（例: `mc1.21.8`）を作成する。
+2. Fabric 公式の開発ページ・API・Maven メタデータで対応バージョンを確認し、`fabric/gradle.properties`、`fabric.mod.json` などの依存関係・バージョン表記を更新する。必要に応じて Loom / Gradle / Java も更新する。
+3. `fabric` で `.\gradlew build` を実行し、API・Mixin などの変更に追従してビルドを通す。
+4. 新ブロック・アイテムの追加候補とグループ分けをユーザーに確認する。合意後に `DefaultItemGroupsCatalog.java` を更新し、`.\gradlew generateDefaultItemGroups` で default config を再生成する。
+5. `.\gradlew test` と `.\gradlew build` を通す。
+6. ビルド済み JAR を案内してユーザーに動作確認を依頼し、問題がなければ完了とする。
+
 # Testing
 
 ```bash
