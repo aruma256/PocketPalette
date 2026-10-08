@@ -1,4 +1,4 @@
-# Default Item Groups カタログ（Minecraft 1.21.9）
+# Default Item Groups カタログ（Minecraft 1.21.10）
 
 PocketPalette が同梱する default config の全サイクルと、収録・並び順の設計方針。
 
