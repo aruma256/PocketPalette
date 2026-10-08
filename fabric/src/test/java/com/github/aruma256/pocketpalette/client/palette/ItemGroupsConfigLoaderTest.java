@@ -433,7 +433,7 @@ public class ItemGroupsConfigLoaderTest {
 
     @Test
     public void testLoad_warnsOnMalformedItemId_withoutAbortingLoad() throws IOException {
-        // "NOT a valid id" is not parseable as a ResourceLocation; it must be
+        // "NOT a valid id" is not parseable as an Identifier; it must be
         // reported per-item, and the rest of the config must still load
         String json = """
             {

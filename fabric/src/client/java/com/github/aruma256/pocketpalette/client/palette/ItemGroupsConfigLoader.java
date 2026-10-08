@@ -30,8 +30,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -172,12 +172,12 @@ public class ItemGroupsConfigLoader {
         }
 
         String itemIdStr = itemObj.get("id").getAsString();
-        ResourceLocation resourceLocation = ResourceLocation.tryParse(itemIdStr);
-        if (resourceLocation == null) {
+        Identifier itemId = Identifier.tryParse(itemIdStr);
+        if (itemId == null) {
             warnings.add(String.format("'%s' is not a valid item. (%s)", itemIdStr, location));
             return null;
         }
-        Optional<Holder.Reference<Item>> itemHolder = BuiltInRegistries.ITEM.get(resourceLocation);
+        Optional<Holder.Reference<Item>> itemHolder = BuiltInRegistries.ITEM.get(itemId);
 
         if (itemHolder.isEmpty()) {
             warnings.add(String.format("'%s' is not a valid item. (%s)", itemIdStr, location));
@@ -273,7 +273,7 @@ public class ItemGroupsConfigLoader {
         ItemStack stack = itemState.toItemStack();
         JsonObject obj = new JsonObject();
 
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         obj.addProperty("id", id.toString());
 
         if (itemState.hasComponents()) {

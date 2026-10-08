@@ -17,7 +17,7 @@ import com.github.aruma256.pocketpalette.MinecraftBootstrapExtension;
 
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -71,7 +71,7 @@ class DefaultItemGroupsCatalogTest {
             Map.entry("_coral_fan", Set.of()),
             Map.entry("_pillar", Set.of()),
             Map.entry("_torch", Set.of("redstone_torch")),
-            // 1.21.9 の銅ランタンは今回の採用対象外（docs/default-item-groups-catalog.md）。
+            // D14 のランタンサイクルは lantern / soul_lantern のみ（docs/default-item-groups-catalog.md）。
             Map.entry("_lantern", Set.of(
                     "sea_lantern", "copper_lantern", "exposed_copper_lantern",
                     "weathered_copper_lantern", "oxidized_copper_lantern",
@@ -98,7 +98,7 @@ class DefaultItemGroupsCatalogTest {
         List<String> unknown = new ArrayList<>();
         for (String id : allCatalogIds()) {
             Optional<Holder.Reference<Item>> holder =
-                    BuiltInRegistries.ITEM.get(ResourceLocation.withDefaultNamespace(id));
+                    BuiltInRegistries.ITEM.get(Identifier.withDefaultNamespace(id));
             if (holder.isEmpty() || !ItemValidation.isValidItem(holder.get().value())) {
                 unknown.add(id);
             }

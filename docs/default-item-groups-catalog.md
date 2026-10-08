@@ -1,4 +1,4 @@
-# Default Item Groups カタログ（Minecraft 1.21.10）
+# Default Item Groups カタログ（Minecraft 1.21.11）
 
 PocketPalette が同梱する default config の全サイクルと、収録・並び順の設計方針。
 
@@ -120,13 +120,6 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 
 - E3: `command_block_minecart` はサバイバル入手不可のため除外。
 - E4: 生物入りバケツは生物運搬という別用途のため除外。
-
-## Minecraft 1.21.9 の追加方針
-
-- 採用: `copper_torch` を D13 に、銅の `pickaxe, shovel, axe, hoe` を E2 の石と鉄の間に追加する。
-- 今回は見送り: 銅の鉄格子・鎖・ランタン・銅ゴーレム像（酸化段階・waxed 版を含む）。C16/C17 と D14 の構成は維持する。
-- 棚・銅チェスト・避雷針の酸化バリエーションも今回の採用対象外。武器・防具・スポーンエッグ・銅塊は既存方針に従い収録しない。
-- 銅ランタン8種は、カタログ網羅性テストの `_lantern` の意図的な除外に明記する。
 
 ## 不採用の方針
 

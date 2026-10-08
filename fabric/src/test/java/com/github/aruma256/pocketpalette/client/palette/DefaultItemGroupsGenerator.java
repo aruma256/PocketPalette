@@ -9,7 +9,7 @@ import java.util.List;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -67,7 +67,7 @@ public final class DefaultItemGroupsGenerator {
     }
 
     private static Item resolve(String id) {
-        return BuiltInRegistries.ITEM.get(ResourceLocation.withDefaultNamespace(id))
+        return BuiltInRegistries.ITEM.get(Identifier.withDefaultNamespace(id))
                 .orElseThrow(() -> new IllegalArgumentException("Unknown item id in catalog: " + id))
                 .value();
     }

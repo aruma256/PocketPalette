@@ -21,13 +21,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 @Environment(EnvType.CLIENT)
 public class PocketPaletteClient implements ClientModInitializer, ClientPlayConnectionEvents.Join {
 
 	public static final KeyMapping.Category KEY_CATEGORY = KeyMapping.Category.register(
-			ResourceLocation.fromNamespaceAndPath(PocketPalette.MODID, "main"));
+			Identifier.fromNamespaceAndPath(PocketPalette.MODID, "main"));
 
 	private static final PaletteKey PALETTE_KEY = new PaletteKey(GLFW.GLFW_KEY_R, KEY_CATEGORY);
 
