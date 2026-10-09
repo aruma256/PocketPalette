@@ -1,4 +1,4 @@
-# Default Item Groups カタログ（Minecraft 1.21.11）
+# Default Item Groups カタログ（Minecraft 26.1.2）
 
 PocketPalette が同梱する default config の全サイクルと、収録・並び順の設計方針。
 
@@ -82,7 +82,7 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 | D2 | 鉱石 | `coal_ore, deepslate_coal_ore, iron_ore, deepslate_iron_ore, copper_ore, …, deepslate_diamond_ore`（登録順=交互）`, nether_gold_ore, nether_quartz_ore, ancient_debris` | 19 |
 | D3 | 原石ブロック | `raw_iron_block, raw_copper_block, raw_gold_block` | 3 |
 | D4 | 鉱物ブロック | `coal_block, iron_block, gold_block, lapis_block, redstone_block, emerald_block, diamond_block, netherite_block, amethyst_block` | 9 |
-| D5 | 小さな花 | `dandelion, poppy, blue_orchid, allium, azure_bluet, red_tulip, orange_tulip, white_tulip, pink_tulip, oxeye_daisy, cornflower, lily_of_the_valley, wither_rose, torchflower, open_eyeblossom, closed_eyeblossom, wildflowers, cactus_flower, pink_petals` | 19 |
+| D5 | 小さな花 | `dandelion, golden_dandelion, poppy, blue_orchid, allium, azure_bluet, red_tulip, orange_tulip, white_tulip, pink_tulip, oxeye_daisy, cornflower, lily_of_the_valley, wither_rose, torchflower, open_eyeblossom, closed_eyeblossom, wildflowers, cactus_flower, pink_petals` | 20 |
 | D6 | 大きな花 | `sunflower, lilac, rose_bush, peony` | 4 |
 | D7 | キノコ・菌類 | `brown_mushroom, red_mushroom, crimson_fungus, warped_fungus` | 4 |
 | D8 | キノコブロック | `brown_mushroom_block, red_mushroom_block, mushroom_stem` | 3 |

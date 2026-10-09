@@ -142,7 +142,7 @@ public final class DefaultItemGroupsCatalog {
                 "coal_block", "iron_block", "gold_block", "lapis_block", "redstone_block",
                 "emerald_block", "diamond_block", "netherite_block", "amethyst_block"));
         cycles.add(List.of(                                                        // D5
-                "dandelion", "poppy", "blue_orchid", "allium", "azure_bluet",
+                "dandelion", "golden_dandelion", "poppy", "blue_orchid", "allium", "azure_bluet",
                 "red_tulip", "orange_tulip", "white_tulip", "pink_tulip",
                 "oxeye_daisy", "cornflower", "lily_of_the_valley", "wither_rose",
                 "torchflower", "open_eyeblossom", "closed_eyeblossom", "wildflowers", "cactus_flower", "pink_petals"));
