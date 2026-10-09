@@ -5,7 +5,7 @@ import java.util.Collection;
 import com.github.aruma256.pocketpalette.PocketPalette;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 
 public final class ItemStackRenderer {
@@ -18,7 +18,7 @@ public final class ItemStackRenderer {
 	private static final double CIRCLE_BASE_RADIUS = 20.0;
 	private static final double CIRCLE_RADIUS_PER_ITEM = 1.2;
 
-	public static void renderItemStacks(GuiGraphics guiGraphics, Collection<ItemStack> stacks, int x, int y, int t, float pt, int lt, byte direction) {
+	public static void renderItemStacks(GuiGraphicsExtractor guiGraphics, Collection<ItemStack> stacks, int x, int y, int t, float pt, int lt, byte direction) {
 		if (stacks.isEmpty()) {
 			return;
 		}
@@ -42,11 +42,11 @@ public final class ItemStackRenderer {
 		}
 	}
 
-	private static void renderAndDecorateItem(GuiGraphics guiGraphics, ItemStack itemStack, int x, int y) {
-		guiGraphics.renderItem(itemStack, x, y);
+	private static void renderAndDecorateItem(GuiGraphicsExtractor guiGraphics, ItemStack itemStack, int x, int y) {
+		guiGraphics.item(itemStack, x, y);
 		// Candidates are real inventory stacks; the count (and durability bar)
 		// is what tells identical-item stacks apart on the ring
-		guiGraphics.renderItemDecorations(Minecraft.getInstance().font, itemStack, x, y);
+		guiGraphics.itemDecorations(Minecraft.getInstance().font, itemStack, x, y);
 	}
 
 }

@@ -12,13 +12,13 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -33,9 +33,7 @@ public class PocketPaletteClient implements ClientModInitializer, ClientPlayConn
 
 	@Override
 	public void onInitializeClient() {
-		PaletteConfigManager.loadAllFromFile();
-
-		KeyBindingHelper.registerKeyBinding(PALETTE_KEY);
+		KeyMappingHelper.registerKeyMapping(PALETTE_KEY);
 		ClientTickEvents.END_CLIENT_TICK.register(PALETTE_KEY);
 		PaletteEditorOpener.register(PALETTE_KEY);
 
@@ -47,7 +45,7 @@ public class PocketPaletteClient implements ClientModInitializer, ClientPlayConn
 		return PALETTE_KEY.onScroll(scrollAmount);
 	}
 
-	public static void onRenderHotbar(GuiGraphics guiGraphics, float partialTicks) {
+	public static void onRenderHotbar(GuiGraphicsExtractor guiGraphics, float partialTicks) {
 		PALETTE_KEY.onRenderHotbar(guiGraphics, partialTicks);
 	}
 
@@ -59,7 +57,7 @@ public class PocketPaletteClient implements ClientModInitializer, ClientPlayConn
 
 	@Override
 	public void onPlayReady(ClientPacketListener handler, PacketSender sender, Minecraft client) {
-		// Reload config now that dynamic registries (enchantments, etc.) are available
+		// ItemStack defaults and dynamic registries are only available after joining (26.1+).
 		PaletteConfigManager.loadAllFromFile();
 		showConfigLoadStatus();
 	}

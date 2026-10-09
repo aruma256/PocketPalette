@@ -14,7 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemStack;
 
@@ -92,11 +92,11 @@ public final class InventorySwapper {
 		}
 		int menuSlot = inventorySlotToMenuSlot(inventorySlot);
 		int selectedHotbarSlot = player.getInventory().getSelectedSlot();
-		mc.gameMode.handleInventoryMouseClick(
+		mc.gameMode.handleContainerInput(
 				player.inventoryMenu.containerId,
 				menuSlot,
 				selectedHotbarSlot,
-				ClickType.SWAP,
+				ContainerInput.SWAP,
 				player);
 		return true;
 	}

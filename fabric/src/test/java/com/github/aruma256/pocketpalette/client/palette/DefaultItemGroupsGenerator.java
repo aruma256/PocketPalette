@@ -7,10 +7,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.SharedConstants;
+import com.github.aruma256.pocketpalette.MinecraftBootstrapExtension;
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -29,8 +29,7 @@ public final class DefaultItemGroupsGenerator {
         if (args.length != 1) {
             throw new IllegalArgumentException("usage: DefaultItemGroupsGenerator <target-json-path>");
         }
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        MinecraftBootstrapExtension.initialize();
 
         Path target = Path.of(args[0]);
         Files.writeString(target, generateJson(), StandardCharsets.UTF_8);

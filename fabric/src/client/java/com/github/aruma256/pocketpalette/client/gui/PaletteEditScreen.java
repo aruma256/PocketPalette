@@ -12,7 +12,7 @@ import com.github.aruma256.pocketpalette.client.palette.PaletteEditModel.AddResu
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -115,14 +115,14 @@ public class PaletteEditScreen extends Screen {
 	}
 
 	@Override
-	public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+	public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
 		guiGraphics.fill(left - 2, top - 2, left + PANEL_W + 2, top + PANEL_H + 2, 0xF0101014);
 
-		super.render(guiGraphics, mouseX, mouseY, partialTick);
+		super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
-		guiGraphics.drawCenteredString(this.font, this.title, left + PANEL_W / 2, top + 4, 0xFFFFFFFF);
+		guiGraphics.centeredText(this.font, this.title, left + PANEL_W / 2, top + 4, 0xFFFFFFFF);
 		if (model.isNewCycle(group)) {
-			guiGraphics.drawString(this.font,
+			guiGraphics.text(this.font,
 					Component.translatable("pocketpalette.editor.new_cycle").withStyle(ChatFormatting.YELLOW),
 					left + 82, top + 18, 0xFFFFFF55);
 		}
@@ -132,7 +132,7 @@ public class PaletteEditScreen extends Screen {
 		renderInventoryGrid(guiGraphics, mouseX, mouseY);
 	}
 
-	private void renderCycleList(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+	private void renderCycleList(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
 		List<ItemState> cycle = model.getCycle(group);
 		int visible = Math.min(VISIBLE_ROWS, cycle.size() - scrollOffset);
 		for (int row = 0; row < visible; row++) {
@@ -141,31 +141,31 @@ public class PaletteEditScreen extends Screen {
 			guiGraphics.fill(left + 6, rowY, left + PANEL_W - 6, rowY + ROW_H - 1, 0x30FFFFFF);
 
 			ItemStack stack = cycle.get(index).toItemStack();
-			guiGraphics.renderItem(stack, left + 8, rowY + 1);
+			guiGraphics.item(stack, left + 8, rowY + 1);
 			String name = this.font.plainSubstrByWidth(stack.getHoverName().getString(), 90);
-			guiGraphics.drawString(this.font, name, left + 28, rowY + 5, 0xFFFFFFFF);
+			guiGraphics.text(this.font, name, left + 28, rowY + 5, 0xFFFFFFFF);
 
 			if (mouseX >= left + 8 && mouseX < left + 24 && mouseY >= rowY + 1 && mouseY < rowY + 17) {
 				guiGraphics.setTooltipForNextFrame(this.font, stack, mouseX, mouseY);
 			}
 		}
 		if (scrollOffset > 0) {
-			guiGraphics.drawString(this.font, "▲", left + PANEL_W - 16, listTop - 8, 0xFFAAAAAA);
+			guiGraphics.text(this.font, "▲", left + PANEL_W - 16, listTop - 8, 0xFFAAAAAA);
 		}
 		if (scrollOffset + VISIBLE_ROWS < cycle.size()) {
-			guiGraphics.drawString(this.font, "▼", left + PANEL_W - 16, listTop + VISIBLE_ROWS * ROW_H, 0xFFAAAAAA);
+			guiGraphics.text(this.font, "▼", left + PANEL_W - 16, listTop + VISIBLE_ROWS * ROW_H, 0xFFAAAAAA);
 		}
 	}
 
-	private void renderStatusLine(GuiGraphics guiGraphics) {
+	private void renderStatusLine(GuiGraphicsExtractor guiGraphics) {
 		Component line = statusMessage;
 		if (line == null) {
 			line = Component.translatable("pocketpalette.editor.inventory_hint").withStyle(ChatFormatting.GRAY);
 		}
-		guiGraphics.drawCenteredString(this.font, line, left + PANEL_W / 2, top + 110, 0xFFFFFFFF);
+		guiGraphics.centeredText(this.font, line, left + PANEL_W / 2, top + 110, 0xFFFFFFFF);
 	}
 
-	private void renderInventoryGrid(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+	private void renderInventoryGrid(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
 		Inventory inventory = this.minecraft.player.getInventory();
 		for (int i = 0; i < INV_COLUMNS * INV_ROWS + INV_COLUMNS; i++) {
 			int slotIndex = toInventorySlot(i);
@@ -177,8 +177,8 @@ public class PaletteEditScreen extends Screen {
 			if (stack.isEmpty()) {
 				continue;
 			}
-			guiGraphics.renderItem(stack, x, y);
-			guiGraphics.renderItemDecorations(this.font, stack, x, y);
+			guiGraphics.item(stack, x, y);
+			guiGraphics.itemDecorations(this.font, stack, x, y);
 			if (mouseX >= x && mouseX < x + SLOT_SIZE - 2 && mouseY >= y && mouseY < y + SLOT_SIZE - 2) {
 				guiGraphics.fill(x, y, x + SLOT_SIZE - 2, y + SLOT_SIZE - 2, 0x80FFFFFF);
 				guiGraphics.setTooltipForNextFrame(this.font, stack, mouseX, mouseY);

@@ -16,7 +16,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.core.component.DataComponents;
@@ -31,7 +31,7 @@ public class PaletteClientGameTest implements FabricClientGameTest {
     @Override
     public void runTest(ClientGameTestContext context) {
         try (TestSingleplayerContext world = context.worldBuilder().create()) {
-            world.getClientWorld().waitForChunksRender();
+            world.getClientLevel().waitForChunksRender();
             ItemStack stone = new ItemStack(Items.STONE, 17);
             stone.set(DataComponents.CUSTOM_NAME, Component.literal("Palette test stone"));
             ItemStack andesite = new ItemStack(Items.ANDESITE, 9);
@@ -83,7 +83,7 @@ public class PaletteClientGameTest implements FabricClientGameTest {
         });
         KeyMapping paletteKey = context.computeOnClient(client -> java.util.Arrays.stream(client.options.keyMappings)
                 .filter(key -> key.getName().equals("key.pocketpalette.palette")).findFirst().orElseThrow());
-        InputConstants.Key originalKey = context.computeOnClient(client -> KeyBindingHelper.getBoundKeyOf(paletteKey));
+        InputConstants.Key originalKey = context.computeOnClient(client -> KeyMappingHelper.getBoundKeyOf(paletteKey));
         try {
             // Q and left click also have container actions: opening must consume them.
             for (InputConstants.Key binding : List.of(

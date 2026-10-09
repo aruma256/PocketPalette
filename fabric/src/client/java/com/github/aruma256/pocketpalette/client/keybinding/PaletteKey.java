@@ -11,7 +11,7 @@ import com.github.aruma256.pocketpalette.client.render.ItemStackRenderer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -154,7 +154,7 @@ public class PaletteKey extends KeyBase {
 		return true;
 	}
 
-	public void onRenderHotbar(GuiGraphics guiGraphics, float partialTicks) {
+	public void onRenderHotbar(GuiGraphicsExtractor guiGraphics, float partialTicks) {
 		if (!isEnabled()) {
 			resetInputState();
 			return;
