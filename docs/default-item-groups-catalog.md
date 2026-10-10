@@ -1,4 +1,4 @@
-# Default Item Groups カタログ（Minecraft 26.1.2）
+# Default Item Groups カタログ（Minecraft 26.2）
 
 PocketPalette が同梱する default config の全サイクルと、収録・並び順の設計方針。
 
@@ -70,9 +70,12 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 | C16 | 銅（未ワックス） | 酸化段階 `{none, exposed, weathered, oxidized}` ごとに `copper_block, chiseled_copper, copper_grate, cut_copper, cut_copper_slab, cut_copper_stairs, copper_bulb, copper_door, copper_trapdoor` | 36 |
 | C17 | 銅（waxed・独立） | C16 と同構成の waxed 版 | 36 |
 | C18 | 樹脂 | `resin_block, resin_bricks, resin_brick_slab, resin_brick_stairs, resin_brick_wall, chiseled_resin_bricks` | 6 |
+| C19 | 硫黄 | `sulfur, +slab/stairs/wall, chiseled_sulfur, polished_sulfur, +slab/stairs/wall, sulfur_bricks, +slab/stairs/wall` | 13 |
+| C20 | 辰砂 | `cinnabar, +slab/stairs/wall, chiseled_cinnabar, polished_cinnabar, +slab/stairs/wall, cinnabar_bricks, +slab/stairs/wall` | 13 |
 
 - C1・C10: 感圧板とボタンは素材別のサイクルに含める。B2 の木材と同様に、石製は C1、磨かれたブラックストーン製は C10 に収録する。
 - 壁のみ・階段のみ等の歯抜けはバニラの提供に従う（例: smooth 系に wall はない）。
+- C19・C20: 硫黄と辰砂は独立サイクル。`potent_sulfur` と `sulfur_spike` は不採用。
 
 ## D. 自然・その他
 

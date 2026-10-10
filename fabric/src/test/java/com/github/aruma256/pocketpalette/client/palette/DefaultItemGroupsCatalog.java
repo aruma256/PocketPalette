@@ -125,6 +125,14 @@ public final class DefaultItemGroupsCatalog {
         cycles.add(List.of(                                                        // C18
                 "resin_block", "resin_bricks", "resin_brick_slab", "resin_brick_stairs", "resin_brick_wall",
                 "chiseled_resin_bricks"));
+        cycles.add(List.of(                                                        // C19
+                "sulfur", "sulfur_slab", "sulfur_stairs", "sulfur_wall", "chiseled_sulfur",
+                "polished_sulfur", "polished_sulfur_slab", "polished_sulfur_stairs", "polished_sulfur_wall",
+                "sulfur_bricks", "sulfur_brick_slab", "sulfur_brick_stairs", "sulfur_brick_wall"));
+        cycles.add(List.of(                                                        // C20
+                "cinnabar", "cinnabar_slab", "cinnabar_stairs", "cinnabar_wall", "chiseled_cinnabar",
+                "polished_cinnabar", "polished_cinnabar_slab", "polished_cinnabar_stairs", "polished_cinnabar_wall",
+                "cinnabar_bricks", "cinnabar_brick_slab", "cinnabar_brick_stairs", "cinnabar_brick_wall"));
 
         // ---- D. 自然・その他 ----
         cycles.add(List.of(                                                        // D1
