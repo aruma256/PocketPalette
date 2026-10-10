@@ -29,7 +29,7 @@ public class MinecraftBootstrapExtension implements BeforeAllCallback {
                 if (!initialized) {
                     SharedConstants.tryDetectVersion();
                     Bootstrap.bootStrap();
-                    BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.build(VanillaRegistries.createLookup())
+                    BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.build(VanillaRegistries.createWorldLookup())
                             .forEach(DataComponentInitializers.PendingComponents::apply);
                     initialized = true;
                 }

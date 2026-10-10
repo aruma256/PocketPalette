@@ -8,6 +8,7 @@ import com.github.aruma256.pocketpalette.client.palette.ItemState;
 import com.github.aruma256.pocketpalette.client.palette.PaletteConfigManager;
 import com.github.aruma256.pocketpalette.client.palette.PaletteEditModel;
 import com.github.aruma256.pocketpalette.client.palette.PaletteEditModel.AddResult;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -213,7 +214,7 @@ public class PaletteEditScreen extends Screen {
 		if (super.mouseClicked(event, doubleClick)) {
 			return true;
 		}
-		if (event.button() != 0) {
+		if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
 			return false;
 		}
 		double mouseX = event.x();

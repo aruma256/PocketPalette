@@ -3,8 +3,6 @@ package com.github.aruma256.pocketpalette.client;
 import java.util.List;
 import java.util.Map;
 
-import org.lwjgl.glfw.GLFW;
-
 import com.github.aruma256.pocketpalette.PocketPalette;
 import com.github.aruma256.pocketpalette.client.gui.PaletteEditScreen;
 import com.github.aruma256.pocketpalette.client.mixin.AbstractContainerScreenAccessor;
@@ -52,7 +50,7 @@ public class PaletteClientGameTest implements FabricClientGameTest {
                         new ItemState(new ItemStack(Items.STONE)),
                         new ItemState(new ItemStack(Items.ANDESITE))))));
             });
-            context.getInput().holdKey(GLFW.GLFW_KEY_R);
+            context.getInput().holdKey(InputConstants.KEY_R);
             try {
                 context.waitTicks(2);
                 context.getInput().scroll(1);
@@ -61,7 +59,7 @@ public class PaletteClientGameTest implements FabricClientGameTest {
                 context.getInput().scroll(-1);
                 awaitInventory(context, world, stone, andesite);
             } finally {
-                context.getInput().releaseKey(GLFW.GLFW_KEY_R);
+                context.getInput().releaseKey(InputConstants.KEY_R);
                 context.waitTick();
             }
             // Once R is released, vanilla scrolling must select a different hotbar slot.
@@ -87,10 +85,10 @@ public class PaletteClientGameTest implements FabricClientGameTest {
         try {
             // Q and left click also have container actions: opening must consume them.
             for (InputConstants.Key binding : List.of(
-                    InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_R),
-                    InputConstants.Type.MOUSE.getOrCreate(GLFW.GLFW_MOUSE_BUTTON_4),
-                    InputConstants.Type.MOUSE.getOrCreate(GLFW.GLFW_MOUSE_BUTTON_LEFT),
-                    InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_Q))) {
+                    InputConstants.Type.KEYBOARD.getOrCreate(InputConstants.KEY_R),
+                    InputConstants.Type.MOUSE.getOrCreate(InputConstants.MOUSE_BUTTON_4),
+                    InputConstants.Type.MOUSE.getOrCreate(InputConstants.MOUSE_BUTTON_LEFT),
+                    InputConstants.Type.KEYBOARD.getOrCreate(InputConstants.KEY_Q))) {
                 setServerInventory(world, Map.of(0, stone, 9, andesite));
                 awaitSlots(context, world, 0, Map.of(0, stone, 9, andesite));
                 double[] cursor = new double[2];
@@ -134,10 +132,10 @@ public class PaletteClientGameTest implements FabricClientGameTest {
         int top = context.computeOnClient(client -> Math.max(8, (client.gui.screen().height - 222) / 2));
         // Group 2 is empty in the default config; add the hotbar stone to the andesite seed.
         moveCursor(context, left + 40, top + 22);
-        context.getInput().pressMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
+        context.getInput().pressMouse(InputConstants.MOUSE_BUTTON_LEFT);
         moveCursor(context, left + 16, top + 189);
-        context.getInput().pressMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
-        context.getInput().pressKey(GLFW.GLFW_KEY_E);
+        context.getInput().pressMouse(InputConstants.MOUSE_BUTTON_LEFT);
+        context.getInput().pressKey(InputConstants.KEY_E);
         context.waitFor(client -> client.gui.screen() == null);
         context.runOnClient(client -> {
             List<ItemState> cycle = ItemPalette.getCycleEntries(new ItemStack(Items.ANDESITE), 1);
@@ -162,21 +160,21 @@ public class PaletteClientGameTest implements FabricClientGameTest {
         context.runOnClient(client -> client.player.getInventory().setSelectedSlot(0));
         awaitSlots(context, world, 0, Map.of(0, stone, 9, andesite));
         context.waitTicks(6); // A fresh press, not a group-switching double tap.
-        context.getInput().holdKey(GLFW.GLFW_KEY_R);
+        context.getInput().holdKey(InputConstants.KEY_R);
         try {
             context.waitTicks(2);
-            context.getInput().holdKey(GLFW.GLFW_KEY_2);
+            context.getInput().holdKey(InputConstants.KEY_2);
             context.waitTick();
-            context.getInput().releaseKey(GLFW.GLFW_KEY_2);
+            context.getInput().releaseKey(InputConstants.KEY_2);
             context.waitFor(client -> client.player.getInventory().getSelectedSlot() == 1);
             context.getInput().scroll(1);
             context.waitTicks(2);
             // Selecting an empty slot must clear the old ring instead of swapping into it.
             awaitSlots(context, world, 1, Map.of(0, stone, 9, andesite));
 
-            context.getInput().holdKey(GLFW.GLFW_KEY_1);
+            context.getInput().holdKey(InputConstants.KEY_1);
             context.waitTick();
-            context.getInput().releaseKey(GLFW.GLFW_KEY_1);
+            context.getInput().releaseKey(InputConstants.KEY_1);
             context.waitFor(client -> client.player.getInventory().getSelectedSlot() == 0);
             context.getInput().scroll(1);
             awaitSlots(context, world, 0, Map.of(0, andesite, 9, stone));
@@ -219,7 +217,7 @@ public class PaletteClientGameTest implements FabricClientGameTest {
             awaitSlots(context, world, 0, Map.of(0, stone, 9, mediumStone, 10, smallStone));
             PocketPalette.LOGGER.info("Client game test passed: held-key slot changes and server inventory changes");
         } finally {
-            context.getInput().releaseKey(GLFW.GLFW_KEY_R);
+            context.getInput().releaseKey(InputConstants.KEY_R);
             context.waitTick();
         }
     }

@@ -3,7 +3,7 @@
 PocketPalette is a **client-side only** Minecraft mod that brings LotTweaks' Item Palette feature to **Survival mode**. Players hold a key (default: R) and scroll to cycle the selected hotbar item through configurable item groups. Because Survival does not allow overwriting inventory slots, cycling is implemented as **inventory swaps** (SWAP container clicks) — only items that actually exist in the player's inventory are offered as candidates.
 
 The repository は mod loader ごとにサブディレクトリへ実装を分ける構成（LotTweaks と同じ流儀）:
-- `fabric/` - Fabric mod loader (Minecraft 26.2) **← 現在の主な作業対象**
+- `fabric/` - Fabric mod loader (Minecraft 26.3) **← 現在の主な作業対象**
 
 移植元は LotTweaks (`../1.21.8_fabric`)。LotTweaks は Creative 専用・server 連携ありだが、PocketPalette は Palette 機能のみを抜き出し、サーバーへのインストール不要（`fabric.mod.json` の `environment: "client"`）。
 
@@ -32,7 +32,7 @@ Default config（`assets/pocketpalette/default-item-groups.json`）は手編集�
 （設計: `docs/default-item-groups-catalog.md`）。カタログと JSON がズレると
 `DefaultItemGroupsCatalogTest` が落ちる。
 
-Fabric uses Java 25（Minecraft 26.2 の要件）。26.1 以降は難読化が廃止され、mappings 指定は不要。
+Fabric uses Java 25（Minecraft 26.3 の要件）。26.1 以降は難読化が廃止され、mappings 指定は不要。
 Loom 1.18 の `net.fabricmc.fabric-loom` プラグインを使用し、Gradle の実行・Mod のコンパイルともに JDK 25 以上が必要。
 
 # Minecraft バージョンアップ手順

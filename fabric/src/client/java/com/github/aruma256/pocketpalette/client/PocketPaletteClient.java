@@ -1,11 +1,10 @@
 package com.github.aruma256.pocketpalette.client;
 
-import org.lwjgl.glfw.GLFW;
-
 import com.github.aruma256.pocketpalette.PocketPalette;
 import com.github.aruma256.pocketpalette.client.gui.PaletteEditorOpener;
 import com.github.aruma256.pocketpalette.client.keybinding.PaletteKey;
 import com.github.aruma256.pocketpalette.client.palette.PaletteConfigManager;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
@@ -29,7 +28,7 @@ public class PocketPaletteClient implements ClientModInitializer, ClientPlayConn
 	public static final KeyMapping.Category KEY_CATEGORY = KeyMapping.Category.register(
 			Identifier.fromNamespaceAndPath(PocketPalette.MODID, "main"));
 
-	private static final PaletteKey PALETTE_KEY = new PaletteKey(GLFW.GLFW_KEY_R, KEY_CATEGORY);
+	private static final PaletteKey PALETTE_KEY = new PaletteKey(InputConstants.KEY_R, KEY_CATEGORY);
 
 	@Override
 	public void onInitializeClient() {
