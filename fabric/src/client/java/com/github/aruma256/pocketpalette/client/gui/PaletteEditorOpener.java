@@ -66,7 +66,7 @@ public final class PaletteEditorOpener {
 		// Close the container properly (sends the close packet) before
 		// replacing the screen, so the server-side container state stays sane
 		client.player.closeContainer();
-		client.setScreen(new PaletteEditScreen(stack));
+		client.gui.setScreen(new PaletteEditScreen(stack));
 		return true;
 	}
 

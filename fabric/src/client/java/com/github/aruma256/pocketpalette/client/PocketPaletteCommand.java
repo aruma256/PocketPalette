@@ -20,7 +20,7 @@ import net.minecraft.network.chat.Component;
 public class PocketPaletteCommand implements ClientCommandRegistrationCallback {
 
 	private static void displayMessage(Component textComponent) {
-		Minecraft.getInstance().getChatListener().handleSystemMessage(textComponent, false);
+		Minecraft.getInstance().gui.chatListener().handleSystemMessage(textComponent, false);
 	}
 
 	private static void displayError(String message) {

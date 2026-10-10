@@ -63,7 +63,7 @@ public class PocketPaletteClient implements ClientModInitializer, ClientPlayConn
 	}
 
 	public static void showConfigError(String translationKey) {
-		Minecraft.getInstance().getChatListener().handleSystemMessage(
+		Minecraft.getInstance().gui.chatListener().handleSystemMessage(
 				Component.translatable(translationKey).withStyle(ChatFormatting.RED), false);
 	}
 

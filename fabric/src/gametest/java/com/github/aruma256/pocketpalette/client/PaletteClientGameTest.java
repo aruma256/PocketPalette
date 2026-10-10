@@ -31,7 +31,7 @@ public class PaletteClientGameTest implements FabricClientGameTest {
     @Override
     public void runTest(ClientGameTestContext context) {
         try (TestSingleplayerContext world = context.worldBuilder().create()) {
-            world.getClientLevel().waitForChunksRender();
+            world.getConnection().waitForChunksRender();
             ItemStack stone = new ItemStack(Items.STONE, 17);
             stone.set(DataComponents.CUSTOM_NAME, Component.literal("Palette test stone"));
             ItemStack andesite = new ItemStack(Items.ANDESITE, 9);
@@ -97,21 +97,21 @@ public class PaletteClientGameTest implements FabricClientGameTest {
                 context.runOnClient(client -> {
                     paletteKey.setKey(binding);
                     KeyMapping.resetMapping();
-                    client.setScreen(new InventoryScreen(client.player));
+                    client.gui.setScreen(new InventoryScreen(client.player));
                     double scale = client.getWindow().getGuiScale();
-                    cursor[0] = ((client.screen.width - 176) / 2 + 16) * scale;
-                    cursor[1] = ((client.screen.height - 166) / 2 + 92) * scale;
+                    cursor[0] = ((client.gui.screen().width - 176) / 2 + 16) * scale;
+                    cursor[1] = ((client.gui.screen().height - 166) / 2 + 92) * scale;
                 });
                 context.getInput().setCursorPos(cursor[0], cursor[1]);
-                context.waitFor(client -> ((AbstractContainerScreenAccessor) client.screen)
+                context.waitFor(client -> ((AbstractContainerScreenAccessor) client.gui.screen())
                         .pocketpalette$getHoveredSlot() == client.player.inventoryMenu.getSlot(9));
                 context.getInput().pressKey(binding);
-                context.waitFor(client -> client.screen instanceof PaletteEditScreen);
+                context.waitFor(client -> client.gui.screen() instanceof PaletteEditScreen);
                 context.runOnClient(client -> {
                     if (!client.player.inventoryMenu.getCarried().isEmpty()) {
                         throw new AssertionError("Editor input picked up the hovered stack");
                     }
-                    client.screen.onClose();
+                    client.gui.screen().onClose();
                 });
                 awaitSlots(context, world, 0, Map.of(0, stone, 9, andesite));
             }
@@ -119,26 +119,26 @@ public class PaletteClientGameTest implements FabricClientGameTest {
             context.runOnClient(client -> {
                 paletteKey.setKey(originalKey);
                 KeyMapping.resetMapping();
-                client.setScreen(null);
+                client.gui.setScreen(null);
             });
         }
         // Exercise the editor's MouseButtonEvent and KeyEvent handlers, not just opening it.
-        context.runOnClient(client -> client.setScreen(new InventoryScreen(client.player)));
-        moveCursor(context, (context.computeOnClient(client -> client.screen.width) - 176) / 2 + 16,
-                (context.computeOnClient(client -> client.screen.height) - 166) / 2 + 92);
-        context.waitFor(client -> ((AbstractContainerScreenAccessor) client.screen)
+        context.runOnClient(client -> client.gui.setScreen(new InventoryScreen(client.player)));
+        moveCursor(context, (context.computeOnClient(client -> client.gui.screen().width) - 176) / 2 + 16,
+                (context.computeOnClient(client -> client.gui.screen().height) - 166) / 2 + 92);
+        context.waitFor(client -> ((AbstractContainerScreenAccessor) client.gui.screen())
                 .pocketpalette$getHoveredSlot() == client.player.inventoryMenu.getSlot(9));
         context.getInput().pressKey(originalKey);
-        context.waitFor(client -> client.screen instanceof PaletteEditScreen);
-        int left = context.computeOnClient(client -> (client.screen.width - 176) / 2);
-        int top = context.computeOnClient(client -> Math.max(8, (client.screen.height - 222) / 2));
+        context.waitFor(client -> client.gui.screen() instanceof PaletteEditScreen);
+        int left = context.computeOnClient(client -> (client.gui.screen().width - 176) / 2);
+        int top = context.computeOnClient(client -> Math.max(8, (client.gui.screen().height - 222) / 2));
         // Group 2 is empty in the default config; add the hotbar stone to the andesite seed.
         moveCursor(context, left + 40, top + 22);
         context.getInput().pressMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
         moveCursor(context, left + 16, top + 189);
         context.getInput().pressMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
         context.getInput().pressKey(GLFW.GLFW_KEY_E);
-        context.waitFor(client -> client.screen == null);
+        context.waitFor(client -> client.gui.screen() == null);
         context.runOnClient(client -> {
             List<ItemState> cycle = ItemPalette.getCycleEntries(new ItemStack(Items.ANDESITE), 1);
             if (cycle == null || cycle.size() != 2

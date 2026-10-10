@@ -8,10 +8,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.github.aruma256.pocketpalette.client.PocketPaletteClient;
 
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.Hud;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 
-@Mixin(Gui.class)
+@Mixin(Hud.class)
 public abstract class HotbarRendererHook {
 
 	@Inject(at = @At("TAIL"), method = "extractItemHotbar(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/DeltaTracker;)V")

@@ -339,8 +339,8 @@ public class ItemGroupsConfigLoaderTest {
         // Group 1 with 1 cycle
         List<List<ItemState>> group1 = new ArrayList<>();
         List<ItemState> cycle1_0 = new ArrayList<>();
-        cycle1_0.add(new ItemState(new ItemStack(Items.WHITE_WOOL)));
-        cycle1_0.add(new ItemState(new ItemStack(Items.ORANGE_WOOL)));
+        cycle1_0.add(new ItemState(new ItemStack(Items.WOOL.white())));
+        cycle1_0.add(new ItemState(new ItemStack(Items.WOOL.orange())));
         group1.add(cycle1_0);
         originalGroups.add(group1);
 
