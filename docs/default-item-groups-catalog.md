@@ -1,4 +1,4 @@
-# Default Item Groups カタログ（Minecraft 26.2）
+# Default Item Groups カタログ（Minecraft 26.3）
 
 PocketPalette が同梱する default config の全サイクルと、収録・並び順の設計方針。
 
@@ -14,7 +14,7 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 - 形状順: `normal, slab, stairs, wall, …`（その後にファミリー固有の形状）
 - 原木系・waxed 銅・glazed_terracotta は独立サイクル
 - サバイバルで通常入手可能なもののみ。デフォルトのエントリはアイテム ID のみを指定する（components による限定はしない）
-- 樹種順は planks の登録順に正規化: `oak, spruce, birch, jungle, acacia, cherry, dark_oak, pale_oak, mangrove, bamboo, crimson, warped`
+- 樹種順は planks の登録順に正規化: `oak, spruce, birch, jungle, acacia, cherry, dark_oak, pale_oak, mangrove, poplar, bamboo, crimson, warped`
   （注: バニラのレジストリは log 系のみ pale_oak が dark_oak より先という不整合があるため、planks 順に統一する）
 
 表のアイテム ID は `minecraft:` を省略。`…` は同じ規則での展開、`+slab/stairs/wall` は直前の素材に対応するハーフブロック・階段・塀を表す。「数」はサイクル内のエントリ数。
@@ -23,30 +23,32 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 
 | # | サイクル | 内容 | 数 |
 |---|---------|------|----|
-| A1 | 羊毛+カーペット | `red_wool, red_carpet, orange_wool, orange_carpet, …` | 32 |
-| A2 | コンクリート+パウダー | `red_concrete, red_concrete_powder, orange_concrete, …` | 32 |
+| A1 | 羊毛+カーペット | `red_wool, red_wool_slab, red_wool_stairs, red_carpet, orange_wool, …` | 64 |
+| A2 | コンクリート+パウダー | `red_concrete, red_concrete_slab, red_concrete_stairs, red_concrete_powder, orange_concrete, …` | 64 |
 | A3 | テラコッタ | `terracotta, red_terracotta, …, white_terracotta` | 17 |
 | A4 | 彩釉テラコッタ（独立） | `red_glazed_terracotta, …, white_glazed_terracotta` | 16 |
 | A5 | ガラス+板ガラス | `glass, glass_pane, tinted_glass, red_stained_glass, red_stained_glass_pane, …` | 35 |
 | A6 | ろうそく | `candle, red_candle, …, white_candle` | 17 |
 | A7 | シュルカーボックス | `shulker_box, red_shulker_box, …` | 17 |
-| A8 | ベッド | `red_bed, …, white_bed` | 16 |
+| A8 | ベッド | `straw_bed, red_bed, …, white_bed` | 17 |
 | A9 | 旗 | `red_banner, …, white_banner` | 16 |
+| A10 | クッション | `red_cushion, …, white_cushion` | 16 |
 
 - A5: `tinted_glass`（遮光ガラス）は無色のガラス・板ガラスの直後に置く。
+- A8: `straw_bed` は使い切りでリスポーン地点を変更しないが、寝具としてベッド群の先頭に収録する。
 - 不採用（色物だが建材でない）: `*_bundle`, `*_harness`, `*_dye`
 
 ## B. 木材
 
 | # | サイクル | 内容 | 数 |
 |---|---------|------|----|
-| B1 | 原木系 | 樹種ごとに `log, stripped_log, wood, stripped_wood`。oak〜mangrove 9種 + `crimson/warped` (stem/hyphae) + `bamboo_block, stripped_bamboo_block` | 46 |
-| B2 | 加工木材メガサイクル | 樹種ごとに `planks, slab, stairs, fence, fence_gate, door, trapdoor, pressure_plate, button, sign, hanging_sign` × 12樹種。bamboo のみ末尾に `bamboo_mosaic, bamboo_mosaic_slab, bamboo_mosaic_stairs` を追加 | 135 |
-| B3 | 葉 | `oak_leaves, …, mangrove_leaves`（9種・planks順）`, azalea_leaves, flowering_azalea_leaves` | 11 |
-| B4 | 苗木 | `oak_sapling, …, pale_oak_sapling, mangrove_propagule, azalea, flowering_azalea` | 11 |
+| B1 | 原木系 | 樹種ごとに `log, stripped_log, wood, stripped_wood`。oak〜poplar 10種 + `crimson/warped` (stem/hyphae) + `bamboo_block, stripped_bamboo_block` | 50 |
+| B2 | 加工木材メガサイクル | 樹種ごとに `planks, slab, stairs, fence, fence_gate, door, trapdoor, pressure_plate, button, sign, hanging_sign` × 13樹種。bamboo のみ末尾に `bamboo_mosaic, bamboo_mosaic_slab, bamboo_mosaic_stairs` を追加 | 146 |
+| B3 | 葉 | `oak_leaves, …, mangrove_leaves`（9種・planks順）`, red_poplar_leaves, orange_poplar_leaves, yellow_poplar_leaves, azalea_leaves, flowering_azalea_leaves` | 14 |
+| B4 | 苗木 | `oak_sapling, …, pale_oak_sapling, mangrove_propagule, poplar_sapling, azalea, flowering_azalea` | 12 |
 
 - B1: 樹種ごとに `log → stripped_log → wood → stripped_wood` の順。原木と木それぞれで、樹皮付きの直後に樹皮を剥いだものを置く。
-- B2: boat / chest_boat は乗り物なので不採用。
+- B2: `*_shelf` は機能ブロック、boat / chest_boat は乗り物なので不採用。
 
 ## C. 石系ファミリー（形状順: normal, slab, stairs, wall, 特殊）
 
@@ -87,7 +89,7 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 | D4 | 鉱物ブロック | `coal_block, iron_block, gold_block, lapis_block, redstone_block, emerald_block, diamond_block, netherite_block, amethyst_block` | 9 |
 | D5 | 小さな花 | `dandelion, golden_dandelion, poppy, blue_orchid, allium, azure_bluet, red_tulip, orange_tulip, white_tulip, pink_tulip, oxeye_daisy, cornflower, lily_of_the_valley, wither_rose, torchflower, open_eyeblossom, closed_eyeblossom, wildflowers, cactus_flower, pink_petals` | 20 |
 | D6 | 大きな花 | `sunflower, lilac, rose_bush, peony` | 4 |
-| D7 | キノコ・菌類 | `brown_mushroom, red_mushroom, crimson_fungus, warped_fungus` | 4 |
+| D7 | キノコ・菌類 | `brown_mushroom, red_mushroom, shelf_mushroom, crimson_fungus, warped_fungus` | 5 |
 | D8 | キノコブロック | `brown_mushroom_block, red_mushroom_block, mushroom_stem` | 3 |
 | D9 | サンゴブロック | 種類ごとに `生, dead`: `tube_coral_block, dead_tube_coral_block, brain_coral_block, …`（外=種類、内=生死のルール適用） | 10 |
 | D10 | サンゴ | 同上 | 10 |
@@ -105,7 +107,7 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 | D22 | 黒曜石 | `obsidian, crying_obsidian` | 2 |
 | D23 | 苔 | `moss_block, moss_carpet, pale_moss_block, pale_moss_carpet, pale_hanging_moss` | 5 |
 | D24 | カボチャ | `pumpkin, carved_pumpkin, jack_o_lantern` | 3 |
-| D25 | 草・下草 | `short_grass, tall_grass, fern, large_fern, bush, dead_bush, firefly_bush, short_dry_grass, tall_dry_grass` | 9 |
+| D25 | 草・下草 | `short_grass, tall_grass, fern, large_fern, bush, red_shrub, dead_bush, firefly_bush, short_dry_grass, tall_dry_grass` | 10 |
 | D26 | スカルク | `sculk, sculk_vein, sculk_catalyst, sculk_shrieker, sculk_sensor` | 5 |
 | D27 | 金床 | `anvil, chipped_anvil, damaged_anvil` | 3 |
 
@@ -128,5 +130,6 @@ JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 
 - **機能ブロック**（作業台・かまど・チェスト・ピストン・ホッパー等）: 建材サイクルの対象外。必要な人は group 2 に自作
 - **武器・防具・ポーション・スポーンエッグ・音楽ディスク・スケルトンの頭等**: 対象外（道具・食料・レール系は E で採用）
+- **探検地図**: 用途と目的地が個々の地図に依存するため、26.3 で個別アイテムになった地図も不採用。
 - **サバイバル入手不可/非正規**: `petrified_oak_slab`, `infested_*`, `reinforced_deepslate`, `budding_amethyst`, `suspicious_sand/gravel`, `bedrock`, `spawner`, `trial_spawner`, `vault`, `command_block` 系, `barrier`, `light`, `structure_*`, `jigsaw`, `test_*`, `farmland`, `dirt_path`
 - **単品でサイクルにならないもの**: `dragon_egg`, `calcite`, `dripstone_block`, `magma_block`, `glowstone`, `sea_lantern`, `shroomlight`, `bone_block`, `hay_block` 等。光源や収納といった用途だけで異素材をまとめる建材サイクルは設けない。

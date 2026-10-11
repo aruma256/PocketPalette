@@ -44,6 +44,7 @@ class DefaultItemGroupsCatalogTest {
             Map.entry("_shulker_box", Set.of()),
             Map.entry("_bed", Set.of()),
             Map.entry("_banner", Set.of()),
+            Map.entry("_cushion", Set.of()),
             Map.entry("_candle", Set.of()),
             Map.entry("_bricks", Set.of(
                     "infested_stone_bricks", "infested_mossy_stone_bricks",

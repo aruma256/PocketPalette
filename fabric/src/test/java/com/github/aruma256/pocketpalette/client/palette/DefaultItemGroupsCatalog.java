@@ -22,10 +22,10 @@ public final class DefaultItemGroupsCatalog {
     /** 樹種順は planks の登録順に正規化（バニラは log 系のみ pale_oak が先で不整合）。 */
     static final List<String> WOODS = List.of(
             "oak", "spruce", "birch", "jungle", "acacia", "cherry",
-            "dark_oak", "pale_oak", "mangrove", "bamboo", "crimson", "warped");
+            "dark_oak", "pale_oak", "mangrove", "poplar", "bamboo", "crimson", "warped");
 
-    /** log/wood 形式を持つオーバーワールドの樹種（oak〜mangrove）。 */
-    private static final List<String> LOG_WOODS = WOODS.subList(0, 9);
+    /** log/wood 形式を持つオーバーワールドの樹種（oak〜poplar）。 */
+    private static final List<String> LOG_WOODS = WOODS.subList(0, 10);
 
     private DefaultItemGroupsCatalog() {}
 
@@ -33,28 +33,34 @@ public final class DefaultItemGroupsCatalog {
         List<List<String>> cycles = new ArrayList<>();
 
         // ---- A. 色物ファミリー（虹順・原色先頭） ----
-        cycles.add(colorLoop(List.of(), "*_wool", "*_carpet"));                    // A1
-        cycles.add(colorLoop(List.of(), "*_concrete", "*_concrete_powder"));       // A2
+        cycles.add(colorLoop(List.of(), "*_wool", "*_wool_slab", "*_wool_stairs", "*_carpet")); // A1
+        cycles.add(colorLoop(List.of(), "*_concrete", "*_concrete_slab", "*_concrete_stairs", "*_concrete_powder")); // A2
         cycles.add(colorLoop(List.of("terracotta"), "*_terracotta"));              // A3
         cycles.add(colorLoop(List.of(), "*_glazed_terracotta"));                   // A4
         cycles.add(colorLoop(List.of("glass", "glass_pane", "tinted_glass"),
                 "*_stained_glass", "*_stained_glass_pane"));                       // A5
         cycles.add(colorLoop(List.of("candle"), "*_candle"));                      // A6
         cycles.add(colorLoop(List.of("shulker_box"), "*_shulker_box"));            // A7
-        cycles.add(colorLoop(List.of(), "*_bed"));                                 // A8
+        cycles.add(colorLoop(List.of("straw_bed"), "*_bed"));                      // A8
         cycles.add(colorLoop(List.of(), "*_banner"));                              // A9
+        cycles.add(colorLoop(List.of(), "*_cushion"));                             // A10
 
         // ---- B. 木材 ----
         cycles.add(logCycle());                                                    // B1
         cycles.add(woodProductsCycle());                                           // B2
         List<String> leaves = new ArrayList<>();                                   // B3
-        LOG_WOODS.forEach(w -> leaves.add(w + "_leaves"));
+        for (String w : LOG_WOODS) {
+            if (w.equals("poplar")) {
+                leaves.addAll(List.of("red_poplar_leaves", "orange_poplar_leaves", "yellow_poplar_leaves"));
+            } else {
+                leaves.add(w + "_leaves");
+            }
+        }
         leaves.add("azalea_leaves");
         leaves.add("flowering_azalea_leaves");
         cycles.add(leaves);
         List<String> saplings = new ArrayList<>();                                 // B4
-        WOODS.subList(0, 8).forEach(w -> saplings.add(w + "_sapling"));
-        saplings.add("mangrove_propagule");
+        LOG_WOODS.forEach(w -> saplings.add(w.equals("mangrove") ? "mangrove_propagule" : w + "_sapling"));
         saplings.add("azalea");
         saplings.add("flowering_azalea");
         cycles.add(saplings);
@@ -155,7 +161,7 @@ public final class DefaultItemGroupsCatalog {
                 "oxeye_daisy", "cornflower", "lily_of_the_valley", "wither_rose",
                 "torchflower", "open_eyeblossom", "closed_eyeblossom", "wildflowers", "cactus_flower", "pink_petals"));
         cycles.add(List.of("sunflower", "lilac", "rose_bush", "peony"));           // D6
-        cycles.add(List.of("brown_mushroom", "red_mushroom", "crimson_fungus", "warped_fungus")); // D7
+        cycles.add(List.of("brown_mushroom", "red_mushroom", "shelf_mushroom", "crimson_fungus", "warped_fungus")); // D7
         cycles.add(List.of("brown_mushroom_block", "red_mushroom_block", "mushroom_stem")); // D8
         cycles.add(coralCycle("_coral_block"));                                    // D9
         cycles.add(coralCycle("_coral"));                                          // D10
@@ -175,7 +181,7 @@ public final class DefaultItemGroupsCatalog {
                 "moss_block", "moss_carpet", "pale_moss_block", "pale_moss_carpet", "pale_hanging_moss"));
         cycles.add(List.of("pumpkin", "carved_pumpkin", "jack_o_lantern"));        // D24
         cycles.add(List.of(                                                        // D25
-                "short_grass", "tall_grass", "fern", "large_fern", "bush", "dead_bush",
+                "short_grass", "tall_grass", "fern", "large_fern", "bush", "red_shrub", "dead_bush",
                 "firefly_bush", "short_dry_grass", "tall_dry_grass"));
         cycles.add(List.of(                                                        // D26
                 "sculk", "sculk_vein", "sculk_catalyst", "sculk_shrieker", "sculk_sensor"));
