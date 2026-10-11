@@ -3,6 +3,7 @@ package com.github.aruma256.pocketpalette.client.keybinding;
 import java.util.List;
 
 import com.github.aruma256.pocketpalette.PocketPalette;
+import com.github.aruma256.pocketpalette.client.compat.LotTweaksCompat;
 import com.github.aruma256.pocketpalette.client.palette.ItemPalette;
 import com.github.aruma256.pocketpalette.client.palette.ItemState;
 import com.github.aruma256.pocketpalette.client.render.ItemStackRenderer;
@@ -22,6 +23,7 @@ public class PaletteKey extends KeyBase {
 	private static final int SURVIVAL_HUD_OFFSET = 14;
 
 	private final PaletteSession session = new PaletteSession();
+	private final LotTweaksCompat lotTweaksCompat = new LotTweaksCompat();
 	protected int lastRotateTime = -1;
 	protected byte rotateDirection = 0;
 
@@ -33,6 +35,13 @@ public class PaletteKey extends KeyBase {
 
 	public PaletteKey(int keyCode, Category category) {
 		super("key.pocketpalette.palette", keyCode, category);
+	}
+
+	@Override
+	public boolean isEnabled() {
+		Minecraft client = Minecraft.getInstance();
+		return client.player == null || !lotTweaksCompat.shouldDisablePaletteKey(
+				client.player.isCreative(), this, client.options.keyMappings);
 	}
 
 	private void updatePhase() {
@@ -124,6 +133,10 @@ public class PaletteKey extends KeyBase {
 
 	/** Returns whether palette input consumes the scroll, even without candidates. */
 	public boolean onScroll(double wheel) {
+		if (!isEnabled()) {
+			resetInputState();
+			return false;
+		}
 		if (this.pressTime == 0 || wheel == 0) {
 			return false;
 		}
@@ -142,6 +155,10 @@ public class PaletteKey extends KeyBase {
 	}
 
 	public void onRenderHotbar(GuiGraphics guiGraphics, float partialTicks) {
+		if (!isEnabled()) {
+			resetInputState();
+			return;
+		}
 		if (this.pressTime == 0) {
 			session.clear();
 			return;

@@ -1,6 +1,7 @@
 package com.github.aruma256.pocketpalette.client.gui;
 
 import com.github.aruma256.pocketpalette.client.PocketPaletteClient;
+import com.github.aruma256.pocketpalette.client.keybinding.PaletteKey;
 import com.github.aruma256.pocketpalette.client.mixin.AbstractContainerScreenAccessor;
 import com.github.aruma256.pocketpalette.client.palette.ItemValidation;
 import com.github.aruma256.pocketpalette.client.palette.PaletteConfigManager;
@@ -10,7 +11,6 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
@@ -29,16 +29,16 @@ public final class PaletteEditorOpener {
 
 	private PaletteEditorOpener() {}
 
-	public static void register(KeyMapping editorKey) {
+	public static void register(PaletteKey editorKey) {
 		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
 			if (!(screen instanceof AbstractContainerScreen<?>)) {
 				return;
 			}
 			// Consume the editor input before the container can move or drop the hovered item.
 			ScreenKeyboardEvents.allowKeyPress(screen).register(
-					(s, event) -> !editorKey.matches(event) || !tryOpen(client, s));
+					(s, event) -> !editorKey.isEnabled() || !editorKey.matches(event) || !tryOpen(client, s));
 			ScreenMouseEvents.allowMouseClick(screen).register(
-					(s, event) -> !editorKey.matchesMouse(event) || !tryOpen(client, s));
+					(s, event) -> !editorKey.isEnabled() || !editorKey.matchesMouse(event) || !tryOpen(client, s));
 		});
 	}
 

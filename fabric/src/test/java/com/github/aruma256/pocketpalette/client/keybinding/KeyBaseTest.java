@@ -16,6 +16,7 @@ public class KeyBaseTest {
      * a unique mapping name to avoid clashes in KeyMapping's static registry.
      */
     private static class TestKey extends KeyBase {
+        boolean enabled = true;
         int pressStartCount = 0;
         int whilePressedCount = 0;
         int releasedCount = 0;
@@ -23,6 +24,11 @@ public class KeyBaseTest {
 
         TestKey() {
             super("key.pocketpalette.test" + (keyCounter++), 82, Category.MISC);
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return enabled;
         }
 
         @Override
@@ -129,5 +135,48 @@ public class KeyBaseTest {
         key.tick(true);
 
         assertEquals(0, key.doubleTapTickAtPressStart);
+    }
+
+    @Test
+    public void testDisabledKeyDoesNotStartPress() {
+        TestKey key = new TestKey();
+        key.enabled = false;
+
+        key.tick(true, 3);
+
+        assertEquals(0, key.pressStartCount);
+        assertEquals(0, key.whilePressedCount);
+        assertEquals(0, key.pressTime);
+        assertEquals(0, key.doubleTapTick);
+        assertTrue(key.isDown(), "Disabling this feature must preserve the shared physical key state");
+    }
+
+    @Test
+    public void testDisablingHeldKeyReleasesOnceAndClearsDoubleTap() {
+        TestKey key = new TestKey();
+        key.tick(true, 2);
+        key.enabled = false;
+
+        key.tick(true, 2);
+
+        assertEquals(1, key.releasedCount);
+        assertEquals(2, key.whilePressedCount);
+        assertEquals(0, key.pressTime);
+        assertEquals(0, key.doubleTapTick);
+    }
+
+    @Test
+    public void testReenablingHeldKeyStartsFreshPress() {
+        TestKey key = new TestKey();
+        key.tick(true);
+        key.enabled = false;
+        key.tick(true);
+        key.enabled = true;
+
+        key.tick(true);
+
+        assertEquals(2, key.pressStartCount);
+        assertEquals(0, key.doubleTapTickAtPressStart);
+        assertEquals(1, key.pressTime);
     }
 }

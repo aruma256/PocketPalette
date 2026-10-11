@@ -19,6 +19,10 @@ public class KeyBase extends KeyMapping implements ClientTickEvents.EndTick {
 
 	@Override
 	public void onEndTick(final Minecraft client) {
+		if (!isEnabled()) {
+			resetInputState();
+			return;
+		}
 		if (this.isDown()) {
 			this.pressTime = Math.min(12345, this.pressTime + 1);
 			if (this.pressTime == 1) {
@@ -35,6 +39,18 @@ public class KeyBase extends KeyMapping implements ClientTickEvents.EndTick {
 				this.doubleTapTick--;
 			}
 		}
+	}
+
+	public boolean isEnabled() {
+		return true;
+	}
+
+	protected final void resetInputState() {
+		if (this.pressTime > 0) {
+			this.onKeyReleased();
+		}
+		this.pressTime = 0;
+		this.doubleTapTick = 0;
 	}
 
 	protected void onKeyPressStart() {

@@ -8,4 +8,6 @@ Ready-to-use item groups are included. To customize a group, hover over an item 
 
 This mod is a Survival-focused spin-off of the Palette feature from [LotTweaks](https://github.com/aruma256/LotTweaks).
 
+When LotTweaks is installed and both mods use the same Palette key, PocketPalette disables its palette and editor key in Creative mode so LotTweaks handles that key. PocketPalette remains available in Survival, or in Creative with a different key binding.
+
 Licensed under the [GNU General Public License v3.0](LICENSE).
