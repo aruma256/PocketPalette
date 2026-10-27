@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   test-fabric:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     defaults:
       run:
@@ -38,13 +38,11 @@ jobs:
       - name: Build and test
         run: ./gradlew build
 
-      - name: Install virtual display and software rendering
-        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri
+      - name: Install Vulkan drivers
+        run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers
 
       - name: Run client game test
-        env:
-          LIBGL_ALWAYS_SOFTWARE: 'true'
-        run: xvfb-run -a ./gradlew runClientGameTest
+        run: ./gradlew runClientGameTest
 
       - name: Store test reports and client diagnostics
         if: always()
