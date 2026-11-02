@@ -1,0 +1,160 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.148'
+    id 'idea'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = archives_base_name
+}
+
+// Mojang ships Java 21 to end users in 1.21.11, so mods should target Java 21.
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+sourceSets {
+    clientGameTest
+    main {
+        java.srcDir '../common/src/main/java'
+        resources.srcDir '../common/src/main/resources'
+    }
+    test {
+        java.srcDir '../common/src/test/java'
+    }
+}
+
+// The test edits config and creates a world, so every run starts from an empty game directory.
+def prepareClientGameTest = tasks.register('prepareClientGameTest') {
+    def gameDirectory = layout.buildDirectory.dir('run/clientGameTest')
+    outputs.upToDateWhen { false }
+    doLast {
+        def directory = gameDirectory.get().asFile
+        directory.deleteDir()
+        directory.mkdirs()
+        // Skip the first launch screens, and keep the world running without window focus.
+        new File(directory, 'options.txt').text = 'onboardAccessibility:false\npauseOnLostFocus:false\nuseNativeTransport:false\nnarrator:0\nsoundCategory_master:0.0\n'
+    }
+}
+
+neoForge {
+    // Specify the version of NeoForge to use.
+    version = project.neo_version
+    addModdingDependenciesTo sourceSets.clientGameTest
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+        pocketpalette_test {
+            sourceSet(sourceSets.clientGameTest)
+        }
+    }
+
+    runs {
+        client {
+            client()
+            loadedMods = [mods."${mod_id}"]
+        }
+
+        clientGameTest {
+            client()
+            sourceSet = sourceSets.clientGameTest
+            loadedMods = [mods."${mod_id}", mods.pocketpalette_test]
+            gameDirectory = layout.buildDirectory.dir('run/clientGameTest').get().asFile
+            taskBefore prepareClientGameTest
+        }
+
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    // Runs JUnit tests inside a NeoForge environment, so Minecraft classes and registries are usable.
+    unitTest {
+        enable()
+        testedMod = mods."${mod_id}"
+        loadedMods = [mods."${mod_id}"]
+    }
+}
+
+dependencies {
+    clientGameTestImplementation sourceSets.main.output
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat = "full"
+    }
+}
+
+// default-item-groups.json を DefaultItemGroupsCatalog から再生成する。
+// NeoForge では Bootstrap に FML の初期化が要るため、MDG が用意した test タスクの環境を借りて JUnit 経由で実行する。
+tasks.register('generateDefaultItemGroups', Test) {
+    group = 'pocketpalette'
+    description = 'Regenerate common/src/main/resources/assets/pocketpalette/default-item-groups.json from DefaultItemGroupsCatalog'
+    def unitTest = tasks.named('test', Test).get()
+    dependsOn unitTest.dependsOn
+    testClassesDirs = unitTest.testClassesDirs
+    classpath = unitTest.classpath
+    workingDir = unitTest.workingDir
+    jvmArgs unitTest.jvmArgs
+    jvmArgumentProviders.addAll unitTest.jvmArgumentProviders
+    systemProperties unitTest.systemProperties
+    systemProperty 'pocketpalette.defaultItemGroupsTarget', file('../common/src/main/resources/assets/pocketpalette/default-item-groups.json').path
+    useJUnitPlatform()
+    filter {
+        includeTestsMatching 'com.github.aruma256.pocketpalette.client.palette.DefaultItemGroupsGenerator'
+    }
+    outputs.upToDateWhen { false }
+}
+
+// This block of code expands all declared replace properties in the specified resource targets.
+// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+            mod_authors            : mod_authors,
+            mod_description        : mod_description,
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+// Include the output of "generateModMetadata" as an input directory for the build
+// this works with both building through Gradle and the IDE.
+sourceSets.main.resources.srcDir generateModMetadata
+// To avoid having to run "generateModMetadata" manually, make it run on every project reload
+neoForge.ideSyncTask generateModMetadata
+
+tasks.named('jar', Jar).configure {
+    def modId = mod_id
+    from("../LICENSE") {
+        rename { "${it}_${modId}" }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+// IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
