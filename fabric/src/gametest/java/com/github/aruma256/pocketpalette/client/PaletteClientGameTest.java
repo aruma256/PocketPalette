@@ -18,10 +18,17 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.gui.screens.inventory.AnvilScreen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AnvilMenu;
+import net.minecraft.world.inventory.RecipeBookType;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
@@ -69,6 +76,7 @@ public class PaletteClientGameTest implements FabricClientGameTest {
             context.waitFor(client -> client.player.getInventory().getSelectedSlot() == 8);
             testInventoryChangesWhileHeld(context, world, stone, andesite);
             testEditorBindings(context, world, stone, andesite);
+            testTextInputPriority(context, world, stone, andesite);
             PocketPalette.LOGGER.info("Client game test passed: Survival swap round trip, stack preservation, and R release");
         }
     }
@@ -123,6 +131,116 @@ public class PaletteClientGameTest implements FabricClientGameTest {
             });
         }
         PocketPalette.LOGGER.info("Client game test passed: keyboard and mouse editor bindings consume input");
+    }
+
+    /** The editor key must stay with a text field that can take input, and open the editor otherwise. */
+    private static void testTextInputPriority(ClientGameTestContext context,
+            TestSingleplayerContext world, ItemStack stone, ItemStack andesite) {
+        setServerInventory(world, Map.of(0, stone, 9, andesite));
+        awaitSlots(context, world, 0, Map.of(0, stone, 9, andesite));
+
+        // Recipe book search: focused by the chat key.
+        context.runOnClient(client -> client.player.getRecipeBook().setOpen(RecipeBookType.CRAFTING, true));
+        openInventoryAndHover(context);
+        pressEditorKey(context, true);
+        openInventoryAndHover(context);
+        context.getInput().pressKey(GLFW.GLFW_KEY_T);
+        pressEditorKey(context, false);
+        context.runOnClient(client -> {
+            client.player.getRecipeBook().setOpen(RecipeBookType.CRAFTING, false);
+            client.setScreen(null);
+        });
+
+        // Anvil name: focused from the start, but editable only with an input item.
+        openAnvilAndHover(context, world);
+        pressEditorKey(context, true);
+        openAnvilAndHover(context, world);
+        world.getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            player.containerMenu.getSlot(0).set(stone.copy());
+            player.containerMenu.broadcastChanges();
+        });
+        context.waitFor(client -> client.player.containerMenu.getSlot(0).hasItem());
+        pressEditorKey(context, false);
+        context.runOnClient(client -> client.player.closeContainer());
+
+        // Creative: only the search tab has a text field, focused by the chat key.
+        world.getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst().setGameMode(GameType.CREATIVE));
+        context.waitFor(client -> client.gameMode.getPlayerMode() == GameType.CREATIVE);
+        openCreativeAndHover(context);
+        pressEditorKey(context, true);
+        openCreativeAndHover(context);
+        context.getInput().pressKey(GLFW.GLFW_KEY_T);
+        awaitHoveredItem(context);
+        pressEditorKey(context, false);
+        context.runOnClient(client -> client.setScreen(null));
+        world.getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst().setGameMode(GameType.SURVIVAL));
+        context.waitFor(client -> client.gameMode.getPlayerMode() == GameType.SURVIVAL);
+        PocketPalette.LOGGER.info("Client game test passed: text fields keep the editor key");
+    }
+
+    private static void openInventoryAndHover(ClientGameTestContext context) {
+        hover(context, context.computeOnClient(client -> {
+            HoverableInventoryScreen screen = new HoverableInventoryScreen(client.player);
+            client.setScreen(screen);
+            return screen.firstBackpackSlotCenter();
+        }));
+    }
+
+    private static void openAnvilAndHover(ClientGameTestContext context, TestSingleplayerContext world) {
+        world.getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst().openMenu(
+                new SimpleMenuProvider((id, inventory, player) -> new AnvilMenu(id, inventory), Component.literal("Anvil"))));
+        context.waitFor(client -> client.screen instanceof AnvilScreen);
+        hover(context, context.computeOnClient(client -> new int[] {
+                (client.screen.width - 176) / 2 + 16, (client.screen.height - 166) / 2 + 92}));
+    }
+
+    private static void openCreativeAndHover(ClientGameTestContext context) {
+        hover(context, context.computeOnClient(client -> {
+            client.setScreen(new CreativeModeInventoryScreen(client.player, client.player.connection.enabledFeatures(), false));
+            return new int[] {(client.screen.width - 195) / 2 + 17, (client.screen.height - 136) / 2 + 26};
+        }));
+    }
+
+    private static void hover(ClientGameTestContext context, int[] guiPos) {
+        double scale = context.computeOnClient(client -> client.getWindow().getGuiScale());
+        context.getInput().setCursorPos(guiPos[0] * scale, guiPos[1] * scale);
+        awaitHoveredItem(context);
+    }
+
+    private static void awaitHoveredItem(ClientGameTestContext context) {
+        context.waitFor(client -> {
+            Slot slot = ((AbstractContainerScreenAccessor) client.screen).pocketpalette$getHoveredSlot();
+            return slot != null && slot.hasItem();
+        });
+    }
+
+    private static void pressEditorKey(ClientGameTestContext context, boolean expectEditor) {
+        // Let slot changes reach the screen, and the previous key's release clear its state.
+        context.waitTicks(2);
+        context.getInput().pressKey(GLFW.GLFW_KEY_R);
+        if (expectEditor) {
+            context.waitFor(client -> client.screen instanceof PaletteEditScreen);
+            context.runOnClient(client -> client.screen.onClose());
+        } else {
+            context.waitTicks(2);
+            context.runOnClient(client -> {
+                if (client.screen instanceof PaletteEditScreen) {
+                    throw new AssertionError("Editor opened while a text field had focus");
+                }
+            });
+        }
+    }
+
+    /** Exposes the slot position, which moves with the recipe book. */
+    private static final class HoverableInventoryScreen extends InventoryScreen {
+        HoverableInventoryScreen(Player player) {
+            super(player);
+        }
+
+        int[] firstBackpackSlotCenter() {
+            return new int[] {leftPos + 16, topPos + 92};
+        }
     }
 
     private static void testInventoryChangesWhileHeld(ClientGameTestContext context,

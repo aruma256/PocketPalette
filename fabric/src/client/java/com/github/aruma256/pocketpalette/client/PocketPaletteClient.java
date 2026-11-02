@@ -17,6 +17,7 @@ import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.Component;
 
@@ -41,6 +42,10 @@ public class PocketPaletteClient implements ClientModInitializer, ClientPlayConn
 
 	public static boolean onScroll(double scrollAmount) {
 		return PALETTE_KEY.onScroll(scrollAmount);
+	}
+
+	public static boolean onContainerKeyPressed(Screen screen, int key, int scancode) {
+		return PALETTE_KEY.matches(key, scancode) && PaletteEditorOpener.tryOpen(Minecraft.getInstance(), screen);
 	}
 
 	public static void onRenderHotbar(GuiGraphics guiGraphics, float partialTicks) {

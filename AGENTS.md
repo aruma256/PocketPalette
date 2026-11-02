@@ -95,6 +95,7 @@ Resources（`assets/pocketpalette/` の `default-item-groups.json`、`lang/`、`
 ### Key Design Decisions
 - **Survival swap instead of Creative overwrite**: LotTweaks uses `handleCreativeModeItemAdd` (Creative only). PocketPalette sends a SWAP container click on the player's `InventoryMenu`, which the server executes — works in Survival and Creative, no server-side mod needed. Swaps are skipped while another container is open (`player.containerMenu != player.inventoryMenu`).
 - **Candidates are inventory-limited**: on key press, `ItemPalette` resolves the configured cycle (exact component match first, then base-item fallback), and `InventorySwapper.findSlotsMatchingPaletteEntry` finds physical stacks. A componentless config entry matches every stack of the same base item; an entry with components requires an exact match. See `docs/palette-component-matching.md`.
+- **Text input takes priority over the editor key**: there is no API for "is the user typing", so the editor opens only for keys that reach `AbstractContainerScreen.keyPressed` unhandled. Container screens with text fields must consume typed keys before that point (otherwise E would close them while typing). Fabric hooks that point with `ContainerKeyHook`, NeoForge uses `ScreenEvent.KeyPressed.Post`. A key that also has a container action (Q, E, number keys) opens the editor on Fabric but keeps the vanilla action on NeoForge. Mouse bindings skip this, since buttons do not type.
 - **Config format**: same JSON schema as LotTweaks latest (`config_version: 1`, `groups` → cycles → `{id, components}`). No legacy text migration (new mod), so LotTweaks' `ConfigMigrator` / `ItemGroupParser` / `PaletteGroup` were intentionally not ported.
 
 ### LotTweaks からの移植時の注意（1.21.8 API）
@@ -118,7 +119,8 @@ LotTweaks は Fabric 実装なので、Fabric API の呼び出しは loader ご�
   - `MouseScrollRedirector` - スクロール横取り
   - `HotbarRendererHook` - 候補リング描画のフック
   - `AbstractContainerScreenAccessor` - エディタ起動用に `hoveredSlot` を公開
-- **Fabric API**: `ClientTickEvents`、`KeyBindingHelper`、`ClientPlayConnectionEvents.JOIN`、`ClientCommandRegistrationCallback`、`ScreenEvents` / `ScreenKeyboardEvents` / `ScreenMouseEvents`。
+  - `ContainerKeyHook` - `AbstractContainerScreen.keyPressed` 内の `super.keyPressed` を包み、未処理のキーでエディタを開く。vanilla は 1.21.10 まで未処理でも `true` を返し、Fabric API の `afterKeyPress` も無条件に発火するので、イベントでは「画面が処理しなかったキー」を判定できない
+- **Fabric API**: `ClientTickEvents`、`KeyBindingHelper`、`ClientPlayConnectionEvents.JOIN`、`ClientCommandRegistrationCallback`、`ScreenEvents` / `ScreenMouseEvents`。
 - **Test**: 上記の JUnit に加え、Client game test（`src/gametest/` の `PaletteClientGameTest`、`./gradlew runClientGameTest`）がある。
 - **Default config**: `DefaultItemGroupsGenerator` は `main` を持ち、`JavaExec` で実行する。生成先は `src/client/resources/assets/pocketpalette/default-item-groups.json`。
 
@@ -129,8 +131,7 @@ LotTweaks は Fabric 実装なので、Fabric API の呼び出しは loader ご�
 - **Mixin は不使用**。NeoForge のイベントと GUI レイヤーで実現している:
   - `InputEvent.MouseScrollingEvent` - スクロール横取り。Spectator では何もしない。
   - `RegisterGuiLayersEvent.registerAbove(VanillaGuiLayers.HOTBAR, ...)` - 候補リング描画。追加レイヤーには vanilla の表示条件が付かないので、`options.hideGui` を自前で確認する。
-  - `ScreenEvent.KeyPressed.Pre` / `MouseButtonPressed.Pre` + `getSlotUnderMouse()` - エディタ起動。
+  - `ScreenEvent.KeyPressed.Post` / `MouseButtonPressed.Pre` + `getSlotUnderMouse()` - エディタ起動。
   - `ClientTickEvent.Post`、`RegisterKeyMappingsEvent`、`RegisterClientCommandsEvent`、`ClientPlayerNetworkEvent.LoggingIn`。
-- **Editor**: `PaletteEditorOpener` はクリエイティブ検索欄の入力中も開かない（検索欄は focus chain の外で `EditBox#setFocused` だけを使うため、`children()` も確認する）。Fabric 版にはこの判定がない。
 - **Test**: ModDevGradle の `unitTest` により NeoForge 環境で実行する。Client game test は無い。
 - **Default config**: 素の `main` では `Bootstrap` が FML 未初期化で落ちるため、`DefaultItemGroupsGenerator` は JUnit テストとして動く。`generateDefaultItemGroups` は `test` タスクの設定を引き継いだ `Test` タスクで、target パスをシステムプロパティで渡す。通常の `test` では skip されるので、skipped 1 件は正常。生成先は `src/main/resources/assets/pocketpalette/default-item-groups.json`。

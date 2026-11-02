@@ -6,9 +6,6 @@ import com.github.aruma256.pocketpalette.client.palette.PaletteConfigManager;
 
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.events.ContainerEventHandler;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.Slot;
@@ -25,12 +22,13 @@ public final class PaletteEditorOpener {
 	private PaletteEditorOpener() {}
 
 	public static void register(KeyMapping editorKey) {
-		// Consume the editor input before the container can move or drop the hovered item.
-		NeoForge.EVENT_BUS.addListener((ScreenEvent.KeyPressed.Pre event) -> {
+		// Post fires only for keys the screen left unhandled, so focused text fields take priority.
+		NeoForge.EVENT_BUS.addListener((ScreenEvent.KeyPressed.Post event) -> {
 			if (editorKey.matches(event.getKeyCode(), event.getScanCode()) && tryOpen(event.getScreen())) {
 				event.setCanceled(true);
 			}
 		});
+		// Consume the editor input before the container can move or drop the hovered item.
 		NeoForge.EVENT_BUS.addListener((ScreenEvent.MouseButtonPressed.Pre event) -> {
 			if (editorKey.matchesMouse(event.getButton()) && tryOpen(event.getScreen())) {
 				event.setCanceled(true);
@@ -45,10 +43,6 @@ public final class PaletteEditorOpener {
 		}
 		Minecraft client = Minecraft.getInstance();
 		if (client.player == null || client.player.isSpectator()) {
-			return false;
-		}
-		// Leave input to focused text fields (creative search, anvil names, etc.).
-		if (isTextInputFocused(screen)) {
 			return false;
 		}
 		Slot slot = containerScreen.getSlotUnderMouse();
@@ -68,26 +62,5 @@ public final class PaletteEditorOpener {
 		client.player.closeContainer();
 		client.setScreen(new PaletteEditScreen(stack));
 		return true;
-	}
-
-	private static boolean isTextInputFocused(Screen screen) {
-		// The creative search box takes focus via EditBox#setFocused only, outside the focus chain.
-		for (GuiEventListener child : screen.children()) {
-			if (child instanceof EditBox editBox && editBox.canConsumeInput()) {
-				return true;
-			}
-		}
-		GuiEventListener listener = screen;
-		while (listener != null) {
-			if (listener instanceof EditBox) {
-				return true;
-			}
-			if (listener instanceof ContainerEventHandler container) {
-				listener = container.getFocused();
-			} else {
-				return false;
-			}
-		}
-		return false;
 	}
 }
