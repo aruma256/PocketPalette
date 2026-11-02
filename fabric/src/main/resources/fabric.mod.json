@@ -15,7 +15,7 @@
 	"environment": "client",
 	"entrypoints": {
 		"client": [
-			"com.github.aruma256.pocketpalette.client.PocketPaletteClient"
+			"com.github.aruma256.pocketpalette.fabric.PocketPaletteFabricClient"
 		]
 	},
 	"mixins": [
