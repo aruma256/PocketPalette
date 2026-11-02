@@ -68,6 +68,8 @@ Default config（`common/src/main/resources/assets/pocketpalette/default-item-gr
 
 Tests use JUnit Jupiter with Minecraft Bootstrap for game environment initialization (`MinecraftBootstrapExtension`). テストコードは `common/src/test/` にあり、各 loader のテスト環境で実行される。loader ごとのテスト環境の違いは各 loader の節を参照。
 
+実際のクライアントを起動する Client game test（`./gradlew runClientGameTest`）は loader ごとにある。シナリオは揃えているが、テスト基盤が違うのでコードは共有していない。挙動を変えたら両方を更新する。
+
 # Architecture
 
 ## 共通層（`common/`）
@@ -139,4 +141,4 @@ LotTweaks は Fabric 実装なので、Fabric API の呼び出しは loader ご�
   - `RegisterGuiLayersEvent.registerAbove(VanillaGuiLayers.HOTBAR, ...)` - 候補リング描画。追加レイヤーには vanilla の表示条件が付かないので、`options.hideGui` を自前で確認する。
   - `ScreenEvent.KeyPressed.Post` / `MouseButtonPressed.Pre` + `getSlotUnderMouse()` - エディタ起動。
   - `ClientTickEvent.Post`、`RegisterKeyMappingsEvent`、`RegisterClientCommandsEvent`、`ClientPlayerNetworkEvent.LoggingIn`。
-- **Test**: ModDevGradle の `unitTest` により NeoForge 環境で実行する。Client game test は無い。`generateDefaultItemGroups` は `test` タスクの設定を引き継いだ `Test` タスクにする。
+- **Test**: ModDevGradle の `unitTest` により NeoForge 環境で実行する。Client game test は `src/clientGameTest/` の `PaletteClientGameTest`（`./gradlew runClientGameTest`）で、別 mod（`pocketpalette_test`）として読み込む。NeoForge にはクライアント用のテスト API が無いので、`ClientGameTestContext` がテスト用スレッドからクライアントを操作する。Fabric と違いゲームは待ち時間の間も進むので、結果は `waitFor` で待つ。実行中はマウスを掴むことがあるが、実際の入力は無視する。`generateDefaultItemGroups` は `test` タスクの設定を引き継いだ `Test` タスクにする。

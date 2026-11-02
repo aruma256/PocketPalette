@@ -14,7 +14,29 @@ base {
 // Mojang ships Java 21 to end users in 1.21.8, so mods should target Java 21.
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-sourceSets { clientGameTest }
+sourceSets {
+    clientGameTest
+    main {
+        java.srcDir '../common/src/main/java'
+        resources.srcDir '../common/src/main/resources'
+    }
+    test {
+        java.srcDir '../common/src/test/java'
+    }
+}
+
+// The test edits config and creates a world, so every run starts from an empty game directory.
+def prepareClientGameTest = tasks.register('prepareClientGameTest') {
+    def gameDirectory = layout.buildDirectory.dir('run/clientGameTest')
+    outputs.upToDateWhen { false }
+    doLast {
+        def directory = gameDirectory.get().asFile
+        directory.deleteDir()
+        directory.mkdirs()
+        // Skip the first launch screens, and keep the world running without window focus.
+        new File(directory, 'options.txt').text = 'onboardAccessibility:false\npauseOnLostFocus:false\nuseNativeTransport:false\nnarrator:0\nsoundCategory_master:0.0\n'
+    }
+}
 
 neoForge {
     // Specify the version of NeoForge to use.
@@ -41,6 +63,7 @@ neoForge {
             sourceSet = sourceSets.clientGameTest
             loadedMods = [mods."${mod_id}", mods.pocketpalette_test]
             gameDirectory = layout.buildDirectory.dir('run/clientGameTest').get().asFile
+            taskBefore prepareClientGameTest
         }
 
         configureEach {
@@ -54,16 +77,6 @@ neoForge {
         enable()
         testedMod = mods."${mod_id}"
         loadedMods = [mods."${mod_id}"]
-    }
-}
-
-sourceSets {
-    main {
-        java.srcDir '../common/src/main/java'
-        resources.srcDir '../common/src/main/resources'
-    }
-    test {
-        java.srcDir '../common/src/test/java'
     }
 }
 
@@ -144,16 +157,4 @@ idea {
         downloadSources = true
         downloadJavadoc = true
     }
-}
-
-// Skips the first-launch screens and keeps the world running without window focus.
-def writeClientGameTestOptions = tasks.register('writeClientGameTestOptions') {
-    def target = layout.buildDirectory.file('run/clientGameTest/options.txt')
-    outputs.file target
-    doLast {
-        target.get().asFile.text = ['onboardAccessibility:false', 'pauseOnLostFocus:false', 'useNativeTransport:false', 'narrator:0', 'soundCategory_master:0.0'].join(System.lineSeparator())
-    }
-}
-afterEvaluate {
-    tasks.named('runClientGameTest') { dependsOn writeClientGameTestOptions }
 }

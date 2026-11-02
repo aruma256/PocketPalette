@@ -1,17 +1,16 @@
 package com.github.aruma256.pocketpalette.neoforge.test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.glfw.GLFW;
 
+import com.github.aruma256.pocketpalette.PocketPalette;
 import com.github.aruma256.pocketpalette.client.gui.PaletteEditScreen;
 import com.github.aruma256.pocketpalette.client.palette.ItemPalette;
 import com.github.aruma256.pocketpalette.client.palette.ItemState;
 import com.github.aruma256.pocketpalette.client.palette.PaletteConfigManager;
-import com.github.aruma256.pocketpalette.neoforge.test.ClientTestMod.Ctx;
 import com.mojang.blaze3d.platform.InputConstants;
 
 import net.minecraft.client.KeyMapping;
@@ -31,11 +30,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 
-/** Port of fabric's PaletteClientGameTest onto {@link Ctx}. */
-final class PaletteClientTest {
-    static final List<String> PASSED = new ArrayList<>();
-
-    static void run(Ctx context) {
+/** Exercises real keyboard/mouse handling, the mod's event listeners and server SWAP handling. */
+final class PaletteClientGameTest {
+    static void run(ClientGameTestContext context) {
         ItemStack stone = new ItemStack(Items.STONE, 17);
         stone.set(DataComponents.CUSTOM_NAME, Component.literal("Palette test stone"));
         ItemStack andesite = new ItemStack(Items.ANDESITE, 9);
@@ -58,6 +55,7 @@ final class PaletteClientTest {
             context.waitTicks(2);
             context.scroll(1);
             awaitSlots(context, 0, Map.of(0, andesite, 9, stone));
+            context.takeScreenshot("palette-after-swap");
             context.scroll(-1);
             awaitSlots(context, 0, Map.of(0, stone, 9, andesite));
         } finally {
@@ -67,24 +65,20 @@ final class PaletteClientTest {
         // Once R is released, vanilla scrolling must select a different hotbar slot.
         context.scroll(1);
         context.waitFor(client -> client.player.getInventory().getSelectedSlot() == 8);
-        PASSED.add("swap round trip / vanilla scroll after release");
-
         testInventoryChangesWhileHeld(context, stone, andesite);
-        PASSED.add("held-key slot changes and server inventory changes");
         testEditorBindings(context, stone, andesite);
-        PASSED.add("editor opens from R / mouse 4 / left click without picking up the stack");
         testContainerActionKeepsVanilla(context, stone, andesite);
-        PASSED.add("NeoForge: Q bound to the editor keeps the vanilla drop");
         testTextInputPriority(context, stone, andesite);
-        PASSED.add("text fields keep the editor key (recipe book / anvil / creative)");
+        PocketPalette.LOGGER.info("Client game test passed: Survival swap round trip, stack preservation, and R release");
     }
 
-    private static KeyMapping paletteKey(Ctx context) {
+    private static KeyMapping paletteKey(ClientGameTestContext context) {
         return context.computeOnClient(client -> Arrays.stream(client.options.keyMappings)
                 .filter(key -> key.getName().equals("key.pocketpalette.palette")).findFirst().orElseThrow());
     }
 
-    private static void testEditorBindings(Ctx context, ItemStack stone, ItemStack andesite) {
+    private static void testEditorBindings(ClientGameTestContext context, ItemStack stone, ItemStack andesite) {
+        // Replace the swap test's immutable fixture with the normal editable config.
         context.runOnClient(client -> {
             if (!PaletteConfigManager.loadAllFromFile()) {
                 throw new AssertionError("Editor test config failed to load");
@@ -93,6 +87,7 @@ final class PaletteClientTest {
         KeyMapping paletteKey = paletteKey(context);
         InputConstants.Key originalKey = context.computeOnClient(client -> paletteKey.getKey());
         try {
+            // Left click also has a container action: opening must consume it.
             for (InputConstants.Key binding : List.of(
                     InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_R),
                     InputConstants.Type.MOUSE.getOrCreate(GLFW.GLFW_MOUSE_BUTTON_4),
@@ -117,10 +112,11 @@ final class PaletteClientTest {
                 client.setScreen(null);
             });
         }
+        PocketPalette.LOGGER.info("Client game test passed: keyboard and mouse editor bindings consume input");
     }
 
-    /** Documented loader difference: on NeoForge a key with a container action keeps that action. */
-    private static void testContainerActionKeepsVanilla(Ctx context, ItemStack stone, ItemStack andesite) {
+    /** Unlike Fabric, a key that also has a container action keeps that action on NeoForge. */
+    private static void testContainerActionKeepsVanilla(ClientGameTestContext context, ItemStack stone, ItemStack andesite) {
         KeyMapping paletteKey = paletteKey(context);
         InputConstants.Key originalKey = context.computeOnClient(client -> paletteKey.getKey());
         try {
@@ -142,9 +138,10 @@ final class PaletteClientTest {
                 client.setScreen(null);
             });
         }
+        PocketPalette.LOGGER.info("Client game test passed: container actions keep their keys");
     }
 
-    private static void bindAndHoverFirstBackpackSlot(Ctx context, KeyMapping paletteKey, InputConstants.Key binding) {
+    private static void bindAndHoverFirstBackpackSlot(ClientGameTestContext context, KeyMapping paletteKey, InputConstants.Key binding) {
         double[] cursor = new double[2];
         context.runOnClient(client -> {
             paletteKey.setKey(binding);
@@ -159,7 +156,8 @@ final class PaletteClientTest {
                 && screen.getSlotUnderMouse() == client.player.inventoryMenu.getSlot(9));
     }
 
-    private static void testTextInputPriority(Ctx context, ItemStack stone, ItemStack andesite) {
+    /** The editor key must stay with a text field that can take input, and open the editor otherwise. */
+    private static void testTextInputPriority(ClientGameTestContext context, ItemStack stone, ItemStack andesite) {
         setServerInventory(context, Map.of(0, stone, 9, andesite));
         awaitSlots(context, 0, Map.of(0, stone, 9, andesite));
 
@@ -200,9 +198,10 @@ final class PaletteClientTest {
         context.runOnClient(client -> client.setScreen(null));
         context.runOnServer(server -> server.getPlayerList().getPlayers().getFirst().setGameMode(GameType.SURVIVAL));
         context.waitFor(client -> client.gameMode.getPlayerMode() == GameType.SURVIVAL);
+        PocketPalette.LOGGER.info("Client game test passed: text fields keep the editor key");
     }
 
-    private static void openInventoryAndHover(Ctx context) {
+    private static void openInventoryAndHover(ClientGameTestContext context) {
         hover(context, context.computeOnClient(client -> {
             HoverableInventoryScreen screen = new HoverableInventoryScreen(client.player);
             client.setScreen(screen);
@@ -210,7 +209,7 @@ final class PaletteClientTest {
         }));
     }
 
-    private static void openAnvilAndHover(Ctx context) {
+    private static void openAnvilAndHover(ClientGameTestContext context) {
         context.runOnServer(server -> server.getPlayerList().getPlayers().getFirst().openMenu(
                 new SimpleMenuProvider((id, inventory, player) -> new AnvilMenu(id, inventory), Component.literal("Anvil"))));
         context.waitFor(client -> client.screen instanceof AnvilScreen);
@@ -218,20 +217,20 @@ final class PaletteClientTest {
                 (client.screen.width - 176) / 2 + 16, (client.screen.height - 166) / 2 + 92}));
     }
 
-    private static void openCreativeAndHover(Ctx context) {
+    private static void openCreativeAndHover(ClientGameTestContext context) {
         hover(context, context.computeOnClient(client -> {
             client.setScreen(new CreativeModeInventoryScreen(client.player, client.player.connection.enabledFeatures(), false));
             return new int[] {(client.screen.width - 195) / 2 + 17, (client.screen.height - 136) / 2 + 26};
         }));
     }
 
-    private static void hover(Ctx context, int[] guiPos) {
+    private static void hover(ClientGameTestContext context, int[] guiPos) {
         double scale = context.computeOnClient(client -> client.getWindow().getGuiScale());
         context.setCursorPos(guiPos[0] * scale, guiPos[1] * scale);
         awaitHoveredItem(context);
     }
 
-    private static void awaitHoveredItem(Ctx context) {
+    private static void awaitHoveredItem(ClientGameTestContext context) {
         context.waitFor(client -> {
             if (!(client.screen instanceof AbstractContainerScreen<?> screen)) {
                 return false;
@@ -241,7 +240,8 @@ final class PaletteClientTest {
         });
     }
 
-    private static void pressEditorKey(Ctx context, boolean expectEditor) {
+    private static void pressEditorKey(ClientGameTestContext context, boolean expectEditor) {
+        // Let slot changes reach the screen, and the previous key's release clear its state.
         context.waitTicks(2);
         context.pressKey(GLFW.GLFW_KEY_R);
         if (expectEditor) {
@@ -257,6 +257,7 @@ final class PaletteClientTest {
         }
     }
 
+    /** Exposes the slot position, which moves with the recipe book. */
     private static final class HoverableInventoryScreen extends InventoryScreen {
         HoverableInventoryScreen(Player player) {
             super(player);
@@ -267,7 +268,7 @@ final class PaletteClientTest {
         }
     }
 
-    private static void testInventoryChangesWhileHeld(Ctx context, ItemStack stone, ItemStack andesite) {
+    private static void testInventoryChangesWhileHeld(ClientGameTestContext context, ItemStack stone, ItemStack andesite) {
         setServerInventory(context, Map.of(0, stone, 9, andesite));
         context.runOnClient(client -> client.player.getInventory().setSelectedSlot(0));
         awaitSlots(context, 0, Map.of(0, stone, 9, andesite));
@@ -327,13 +328,14 @@ final class PaletteClientTest {
             awaitSlots(context, 0, Map.of(0, mediumStone, 9, stone, 10, smallStone));
             context.scroll(1);
             awaitSlots(context, 0, Map.of(0, stone, 9, mediumStone, 10, smallStone));
+            PocketPalette.LOGGER.info("Client game test passed: held-key slot changes and server inventory changes");
         } finally {
             context.releaseKey(GLFW.GLFW_KEY_R);
             context.waitTick();
         }
     }
 
-    private static void setServerInventory(Ctx context, Map<Integer, ItemStack> stacks) {
+    private static void setServerInventory(ClientGameTestContext context, Map<Integer, ItemStack> stacks) {
         context.runOnServer(server -> {
             var player = server.getPlayerList().getPlayers().getFirst();
             player.getInventory().clearContent();
@@ -342,11 +344,11 @@ final class PaletteClientTest {
         });
     }
 
-    private static void awaitSlots(Ctx context, int selectedSlot, Map<Integer, ItemStack> stacks) {
+    private static void awaitSlots(ClientGameTestContext context, int selectedSlot, Map<Integer, ItemStack> stacks) {
         context.waitFor(client -> client.player.getInventory().getSelectedSlot() == selectedSlot
                 && matchesSlots(client.player.getInventory(), stacks));
         // Check authoritative state too: client prediction alone must not pass this test.
-        for (int tick = 0; tick < ClientTestMod.TIMEOUT_TICKS; tick++) {
+        for (int tick = 0; tick < ClientGameTestContext.DEFAULT_TIMEOUT; tick++) {
             if (context.computeOnServer(server -> {
                 var inventory = server.getPlayerList().getPlayers().getFirst().getInventory();
                 return inventory.getSelectedSlot() == selectedSlot && matchesSlots(inventory, stacks);
@@ -365,8 +367,5 @@ final class PaletteClientTest {
             }
         }
         return true;
-    }
-
-    private PaletteClientTest() {
     }
 }

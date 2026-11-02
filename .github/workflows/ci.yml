@@ -98,6 +98,6 @@ jobs:
           path: |
             neoforge/build/reports/
             neoforge/build/test-results/
-            neoforge/build/run/**/client-test-result.txt
             neoforge/build/run/**/logs/
             neoforge/build/run/**/crash-reports/
+            neoforge/build/run/**/screenshots/
