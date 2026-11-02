@@ -239,7 +239,7 @@ public class PaletteEditScreen extends Screen {
 					Component.translatable("pocketpalette.editor.duplicate_in_cycle").withStyle(ChatFormatting.RED);
 			case DUPLICATE_IN_GROUP -> statusMessage =
 					Component.translatable("pocketpalette.editor.duplicate_in_group").withStyle(ChatFormatting.RED);
-			case INVALID -> { /* ignore */ }
+			case INVALID -> {}
 		}
 	}
 

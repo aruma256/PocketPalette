@@ -44,8 +44,6 @@ final class PaletteSession {
 		if (heldStack.isEmpty() || entries == null || entries.isEmpty()) {
 			return;
 		}
-		// The held stack leads. Other stacks follow in cycle order, sorted by
-		// count and remaining durability by InventorySwapper.
 		candidates.add(new Candidate(heldStack, selectedSlot));
 		Set<Integer> claimedSlots = new HashSet<>();
 		for (ItemState entry : entries) {
@@ -78,7 +76,7 @@ final class PaletteSession {
 		return candidates.size();
 	}
 
-	/** Copies for rendering, so callers cannot mutate the tracked stacks. */
+	/** Copies, so callers cannot mutate the tracked stacks. */
 	List<ItemStack> getStacks() {
 		return candidates.stream().map(candidate -> candidate.stack.copy()).toList();
 	}

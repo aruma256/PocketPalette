@@ -206,7 +206,6 @@ public class ItemGroupsConfigLoaderTest {
 
     @Test
     public void testLoad_warnsOnDuplicateItemAcrossCyclesInSameGroup() throws IOException {
-        // Same item (stone) appears in two different cycles within the same group
         String json = """
             {
               "config_version": 1,
@@ -228,7 +227,6 @@ public class ItemGroupsConfigLoaderTest {
 
     @Test
     public void testLoad_allowsSameItemInDifferentGroups() throws IOException {
-        // Same item (stone) appears in different groups - this should be allowed
         String json = """
             {
               "config_version": 1,
@@ -248,7 +246,6 @@ public class ItemGroupsConfigLoaderTest {
 
         assertTrue(result.warnings().isEmpty(), "Should allow same item in different groups. Warnings: " + result.warnings());
         assertEquals(2, result.groups().size());
-        // Both groups should have their cycles intact
         assertEquals(1, result.groups().get(0).size());
         assertEquals(1, result.groups().get(1).size());
     }
@@ -271,7 +268,7 @@ public class ItemGroupsConfigLoaderTest {
 
         assertFalse(result.warnings().isEmpty());
         assertTrue(result.warnings().stream().anyMatch(w -> w.contains("less than 2")));
-        // Empty cycles should not be added
+        // The too-short cycle is dropped, not only warned about
         assertTrue(result.groups().get(0).isEmpty());
     }
 
@@ -310,7 +307,6 @@ public class ItemGroupsConfigLoaderTest {
 
         assertTrue(ItemGroupsConfigLoader.configExists(tempDir));
 
-        // Load it back and verify
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
         assertTrue(result.warnings().isEmpty(), "Warnings: " + result.warnings());
         assertEquals(1, result.groups().size());
@@ -322,7 +318,6 @@ public class ItemGroupsConfigLoaderTest {
     public void testSaveAndLoad_roundTrip() throws IOException {
         List<List<List<ItemState>>> originalGroups = new ArrayList<>();
 
-        // Group 0 with 2 cycles
         List<List<ItemState>> group0 = new ArrayList<>();
         List<ItemState> cycle0_0 = new ArrayList<>();
         cycle0_0.add(new ItemState(new ItemStack(Items.STONE)));
@@ -336,7 +331,6 @@ public class ItemGroupsConfigLoaderTest {
         group0.add(cycle0_1);
         originalGroups.add(group0);
 
-        // Group 1 with 1 cycle
         List<List<ItemState>> group1 = new ArrayList<>();
         List<ItemState> cycle1_0 = new ArrayList<>();
         cycle1_0.add(new ItemState(new ItemStack(Items.WHITE_WOOL)));
@@ -344,10 +338,8 @@ public class ItemGroupsConfigLoaderTest {
         group1.add(cycle1_0);
         originalGroups.add(group1);
 
-        // Save
         ItemGroupsConfigLoader.save(tempDir, originalGroups);
 
-        // Load back
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(tempDir);
 
         assertTrue(result.warnings().isEmpty(), "Warnings: " + result.warnings());
@@ -355,7 +347,6 @@ public class ItemGroupsConfigLoaderTest {
         assertEquals(2, result.groups().get(0).size());
         assertEquals(1, result.groups().get(1).size());
 
-        // Verify items
         assertEquals(Items.STONE, result.groups().get(0).get(0).get(0).toItemStack().getItem());
         assertEquals(Items.GRANITE, result.groups().get(0).get(0).get(1).toItemStack().getItem());
         assertEquals(Items.DIORITE, result.groups().get(0).get(0).get(2).toItemStack().getItem());

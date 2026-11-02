@@ -111,8 +111,8 @@ public class ItemPaletteTest {
         );
 
         List<List<List<ItemState>>> groups = new ArrayList<>();
-        groups.add(List.of(cycle0)); // Group 0
-        groups.add(List.of(cycle1)); // Group 1
+        groups.add(List.of(cycle0));
+        groups.add(List.of(cycle1));
         ItemPalette.loadGroups(groups);
 
         assertNotNull(ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0));
@@ -127,9 +127,9 @@ public class ItemPaletteTest {
         assertEquals(0, ItemPalette.getGroupCount());
 
         List<List<List<ItemState>>> groups = new ArrayList<>();
-        groups.add(new ArrayList<>()); // Group 0
-        groups.add(new ArrayList<>()); // Group 1
-        groups.add(new ArrayList<>()); // Group 2
+        groups.add(new ArrayList<>());
+        groups.add(new ArrayList<>());
+        groups.add(new ArrayList<>());
         ItemPalette.loadGroups(groups);
 
         assertEquals(3, ItemPalette.getGroupCount());
@@ -167,11 +167,9 @@ public class ItemPaletteTest {
         groups.add(Arrays.asList(plainCycle, namedCycle));
         ItemPalette.loadGroups(groups);
 
-        // Query with named stone should return the named cycle
         List<ItemState> result = ItemPalette.getCycleEntries(namedStone.copy(), 0);
         assertEquals(namedCycle, result);
 
-        // Query with plain stone should return the plain cycle
         result = ItemPalette.getCycleEntries(new ItemStack(Items.STONE), 0);
         assertEquals(plainCycle, result);
     }

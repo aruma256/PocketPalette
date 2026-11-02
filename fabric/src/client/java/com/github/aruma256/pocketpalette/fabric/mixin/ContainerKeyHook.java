@@ -12,7 +12,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 @Mixin(AbstractContainerScreen.class)
 public abstract class ContainerKeyHook {
 
-	// Screens with text fields consume typed keys before reaching this call, so they take priority.
+	// Screens with text fields consume typed keys before reaching this call.
 	@WrapOperation(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyPressed(III)Z"))
 	private boolean pocketpalette_openEditorOnUnhandledKey(AbstractContainerScreen<?> screen, int key, int scancode, int modifiers, Operation<Boolean> original) {
 		return original.call(screen, key, scancode, modifiers)

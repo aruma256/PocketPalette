@@ -22,7 +22,6 @@ public class PaletteKey extends KeyBase {
 	protected int lastRotateTime = -1;
 	protected byte rotateDirection = 0;
 
-	// Revalidated before scrolling, since number keys can change the selected slot.
 	private LocalPlayer observedPlayer;
 	private boolean observedSpectator;
 
@@ -124,7 +123,7 @@ public class PaletteKey extends KeyBase {
 		if (this.pressTime == 0 || wheel == 0) {
 			return false;
 		}
-		// Input callbacks can arrive between ticks, so validate here too.
+		// Input callbacks can arrive between ticks, so refresh here too.
 		refreshCandidatesIfChanged();
 		if (session.isEmpty()) {
 			return true;

@@ -11,7 +11,6 @@ import com.github.aruma256.pocketpalette.client.palette.ItemState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemStack;
@@ -34,12 +33,6 @@ public final class InventorySwapper {
 	 *
 	 * @return matching inventory slot indices, empty if none
 	 */
-	public static List<Integer> findSlotsMatchingPaletteEntry(Player player, ItemState entry) {
-		Inventory inventory = player.getInventory();
-		return findMatchingSlots(inventory::getItem, inventory.getSelectedSlot(), entry);
-	}
-
-	// Used by palette sessions and tests without requiring a Player/Inventory instance.
 	static List<Integer> findMatchingSlots(IntFunction<ItemStack> slotGetter, int selectedSlot, ItemState entry) {
 		ItemStack target = entry.toItemStack();
 		if (!entry.hasComponents()) {
@@ -61,7 +54,7 @@ public final class InventorySwapper {
 				slots.add(i);
 			}
 		}
-		// Use up smaller stacks and worn tools first; stable sorting preserves slot order on ties.
+		// Use up smaller stacks and worn tools first.
 		slots.sort(Comparator.comparingInt((Integer slot) -> slotGetter.apply(slot).getCount())
 				.thenComparingInt(slot -> {
 					ItemStack stack = slotGetter.apply(slot);

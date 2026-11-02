@@ -11,20 +11,16 @@ import net.minecraft.world.item.ItemStack;
 
 public class ItemPalette {
 
-    // Cache for lookups: each group index maps to a Map<ItemState, List<ItemState>>
+    // For each group, maps an entry to the cycle containing it.
     private static final List<Map<ItemState, List<ItemState>>> GROUP_CACHES = new ArrayList<>();
 
-    // Raw group data for serialization
+    // The source data that GROUP_CACHES is built from.
     private static List<List<List<ItemState>>> groupData = new ArrayList<>();
 
     public static int getGroupCount() {
         return GROUP_CACHES.size();
     }
 
-    /**
-     * Get the lookup cache for the given group, or null if the stack is
-     * invalid or the group index is out of range.
-     */
     private static Map<ItemState, List<ItemState>> getCache(ItemStack itemStack, int groupIndex) {
         if (!ItemValidation.isValidStack(itemStack)) {
             return null;
@@ -50,11 +46,7 @@ public class ItemPalette {
         }
 
         ItemState key = new ItemState(itemStack);
-
-        // Stage 1: Try exact match (with components)
         List<ItemState> cycle = cache.get(key);
-
-        // Stage 2: Fallback without components
         if (cycle == null) {
             key = key.withoutComponents();
             cycle = cache.get(key);
@@ -93,7 +85,6 @@ public class ItemPalette {
                     continue;
                 }
 
-                // Register each item in the cycle
                 for (ItemState itemState : cycle) {
                     if (cache.containsKey(itemState)) {
                         PocketPalette.LOGGER.warn("Duplicate item in palette: {}", itemState);

@@ -13,7 +13,6 @@ public class KeyBase extends KeyMapping {
 		super(description, keyCode, category);
 	}
 
-	/** Called once per client tick, after the tick has run. */
 	public void onEndTick(final Minecraft client) {
 		if (this.isDown()) {
 			this.pressTime = Math.min(12345, this.pressTime + 1);

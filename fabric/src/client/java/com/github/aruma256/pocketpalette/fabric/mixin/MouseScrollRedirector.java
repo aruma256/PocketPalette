@@ -16,7 +16,7 @@ public abstract class MouseScrollRedirector {
 	private int pocketpalette_redirectedScrollWheelSelection(double rawScrollAmount, int currentSelection, int maxSelections, Operation<Integer> original) {
 		int scrollAmount = (int)Math.signum(rawScrollAmount);
 		if (PocketPaletteClient.onScroll(scrollAmount)) {
-			return currentSelection; // キャンセルされた場合は現在のスロットをそのまま返す
+			return currentSelection;
 		}
 		return original.call(rawScrollAmount, currentSelection, maxSelections);
 	}

@@ -3,7 +3,7 @@ package com.github.aruma256.pocketpalette.client.palette;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * NBT/Component-aware wrapper for ItemStack that can be used as a HashMap key.
+ * Component-aware wrapper for ItemStack that can be used as a HashMap key.
  * Two ItemStates are considered equal if they have the same item and components.
  * Stack count is normalized to 1 (count differences are ignored).
  */

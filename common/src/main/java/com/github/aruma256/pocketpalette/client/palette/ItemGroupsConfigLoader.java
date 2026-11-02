@@ -42,9 +42,8 @@ public class ItemGroupsConfigLoader {
     private static final int CURRENT_CONFIG_VERSION = 1;
 
     /**
-     * Get the appropriate RegistryAccess for codec operations.
-     * Uses the client's level registry (includes data-driven registries like enchantments)
-     * when in a world, otherwise falls back to built-in registries.
+     * Prefers the client's level registries, which include data-driven ones like enchantments.
+     * Outside a world only the built-in registries are available, so those entries cannot resolve.
      */
     private static RegistryAccess getRegistryAccess() {
         // Minecraft.getInstance() is null in unit tests (no client running)
@@ -52,14 +51,9 @@ public class ItemGroupsConfigLoader {
         if (mc != null && mc.level != null) {
             return mc.level.registryAccess();
         }
-        // Fallback for when not in a world (limited - won't have enchantments etc.)
         return RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
     }
 
-    /**
-     * Create RegistryOps backed by the client's registry access, so that
-     * data-driven registries (e.g. enchantments) resolve when available.
-     */
     private static RegistryOps<Tag> createRegistryOps() {
         // Components contain typed NBT (e.g. custom_data); a JSON intermediate loses those types.
         return RegistryOps.create(NbtOps.INSTANCE, getRegistryAccess());
@@ -228,7 +222,6 @@ public class ItemGroupsConfigLoader {
                     for (int cycleIdx = 0; cycleIdx < cyclesInGroup.size(); cycleIdx++) {
                         List<ItemState> itemsInCycle = cyclesInGroup.get(cycleIdx);
 
-                        // Build cycle array inline (single line)
                         JsonArray itemsArray = new JsonArray();
                         for (ItemState itemState : itemsInCycle) {
                             itemsArray.add(serializeItemState(itemState));
@@ -291,7 +284,6 @@ public class ItemGroupsConfigLoader {
 
     public static List<List<List<ItemState>>> createDefaultGroups() {
         List<List<List<ItemState>>> groups = new ArrayList<>();
-        // Two empty groups for PRIMARY and SECONDARY
         groups.add(new ArrayList<>());
         groups.add(new ArrayList<>());
         return groups;

@@ -16,10 +16,6 @@ public final class PaletteEditorOpener {
 
 	private PaletteEditorOpener() {}
 
-	/**
-	 * @param slot the slot under the mouse, or null
-	 * @return whether the editor handled the input, so the container must not process it
-	 */
 	public static boolean tryOpen(Slot slot) {
 		Minecraft client = Minecraft.getInstance();
 		if (client.player == null || client.player.isSpectator()) {

@@ -42,7 +42,6 @@ public class DefaultItemGroupsGenerator {
         System.out.println("Wrote " + target.toAbsolutePath());
     }
 
-    /** Builds the groups from the catalog and renders them via the production serializer. */
     public static String generateJson() throws IOException {
         Path tempDir = Files.createTempDirectory("pocketpalette-default-gen");
         try {

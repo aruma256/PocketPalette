@@ -34,13 +34,11 @@ public class PaletteConfigManager {
     public static boolean loadAllFromFile() {
         LOG_CONFIG_WARNINGS.clear();
 
-        // If config doesn't exist, copy default
         if (!ItemGroupsConfigLoader.configExists(configDir)) {
             PocketPalette.LOGGER.debug("Config file does not exist, copying default.");
             copyDefaultJsonFromResources();
         }
 
-        // Load from JSON
         ItemGroupsConfigLoader.LoadResult result = ItemGroupsConfigLoader.load(configDir);
         LOG_CONFIG_WARNINGS.addAll(result.warnings());
         for (String warning : result.warnings()) {
@@ -61,7 +59,6 @@ public class PaletteConfigManager {
         try (InputStream is = PaletteConfigManager.class.getResourceAsStream(DEFAULT_JSON_RESOURCE)) {
             if (is == null) {
                 PocketPalette.LOGGER.warn("Default JSON resource not found: {}. Creating empty config.", DEFAULT_JSON_RESOURCE);
-                // Create default empty groups
                 List<List<List<ItemState>>> defaultGroups = ItemGroupsConfigLoader.createDefaultGroups();
                 ItemGroupsConfigLoader.save(configDir, defaultGroups);
                 return;
@@ -69,7 +66,6 @@ public class PaletteConfigManager {
             Files.copy(is, targetFile.toPath());
         } catch (IOException e) {
             PocketPalette.LOGGER.error("Failed to copy default config from resources", e);
-            // Create default empty groups as fallback
             List<List<List<ItemState>>> defaultGroups = ItemGroupsConfigLoader.createDefaultGroups();
             ItemGroupsConfigLoader.save(configDir, defaultGroups);
         }
@@ -96,10 +92,7 @@ public class PaletteConfigManager {
         return !savePending || saveAllToFile();
     }
 
-    /**
-     * Rebuild the palette caches from the (mutated) group data and persist it.
-     * Used by the palette editor after committing an edit session.
-     */
+    /** Rebuild the palette caches from the (mutated) group data and persist it. */
     public static boolean applyGroupDataAndSave() {
         if (!editingAllowed) {
             return false;

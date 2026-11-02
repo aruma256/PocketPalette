@@ -72,7 +72,7 @@ public class PocketPaletteNeoForgeClient {
 	}
 
 	private static void onContainerKeyPressed(ScreenEvent.KeyPressed.Post event) {
-		// Post fires only for keys the screen left unhandled, so focused text fields take priority.
+		// Post fires only for keys the screen left unhandled.
 		if (event.getScreen() instanceof AbstractContainerScreen<?> screen
 				&& PocketPaletteClient.onContainerKeyPressed(screen.getSlotUnderMouse(), event.getKeyCode(), event.getScanCode())) {
 			event.setCanceled(true);

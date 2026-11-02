@@ -10,11 +10,9 @@ import net.minecraft.world.item.ItemStack;
 
 public final class ItemStackRenderer {
 
-	// Animation timing constants
 	private static final double CIRCLE_EXPAND_SPEED = 3.0;
 	private static final double AFTERIMAGE_FADE_SPEED = 1.5;
 
-	// Circle layout constants
 	private static final double CIRCLE_BASE_RADIUS = 20.0;
 	private static final double CIRCLE_RADIUS_PER_ITEM = 1.2;
 
@@ -29,7 +27,7 @@ public final class ItemStackRenderer {
 		double max_r = CIRCLE_BASE_RADIUS + stacks.size() * CIRCLE_RADIUS_PER_ITEM;
 		double r = max_r * Math.tanh((t + pt) / CIRCLE_EXPAND_SPEED);
 		double afterimage = 1 - Math.tanh((t + pt - lt) / AFTERIMAGE_FADE_SPEED);
-		//
+
 		int i = 0;
 		for (ItemStack c: stacks) {
 			// Screen y grows downward, so a positive angle step lays items out
