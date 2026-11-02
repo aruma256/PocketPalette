@@ -42,6 +42,17 @@ neoForge {
     }
 }
 
+// 共通ソース
+sourceSets {
+    main {
+        java.srcDir '../common/src/main/java'
+        resources.srcDir '../common/src/main/resources'
+    }
+    test {
+        java.srcDir '../common/src/test/java'
+    }
+}
+
 dependencies {
     // Testing dependencies
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
@@ -60,7 +71,7 @@ test {
 // NeoForge では Bootstrap に FML の初期化が要るため、MDG が用意した test タスクの環境を借りて JUnit 経由で実行する。
 tasks.register('generateDefaultItemGroups', Test) {
     group = 'pocketpalette'
-    description = 'Regenerate src/main/resources/assets/pocketpalette/default-item-groups.json from DefaultItemGroupsCatalog'
+    description = 'Regenerate common/src/main/resources/assets/pocketpalette/default-item-groups.json from DefaultItemGroupsCatalog'
     def unitTest = tasks.named('test', Test).get()
     dependsOn unitTest.dependsOn
     testClassesDirs = unitTest.testClassesDirs
@@ -69,7 +80,7 @@ tasks.register('generateDefaultItemGroups', Test) {
     jvmArgs unitTest.jvmArgs
     jvmArgumentProviders.addAll unitTest.jvmArgumentProviders
     systemProperties unitTest.systemProperties
-    systemProperty 'pocketpalette.defaultItemGroupsTarget', "${projectDir}/src/main/resources/assets/pocketpalette/default-item-groups.json"
+    systemProperty 'pocketpalette.defaultItemGroupsTarget', file('../common/src/main/resources/assets/pocketpalette/default-item-groups.json').path
     useJUnitPlatform()
     filter {
         includeTestsMatching 'com.github.aruma256.pocketpalette.client.palette.DefaultItemGroupsGenerator'

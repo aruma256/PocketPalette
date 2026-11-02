@@ -2,17 +2,22 @@
 
 PocketPalette is a **client-side only** Minecraft mod that brings LotTweaks' Item Palette feature to **Survival mode**. Players hold a key (default: R) and scroll to cycle the selected hotbar item through configurable item groups. Because Survival does not allow overwriting inventory slots, cycling is implemented as **inventory swaps** (SWAP container clicks) — only items that actually exist in the player's inventory are offered as candidates.
 
-Fabric と NeoForge の 2 つの mod loader に対応している。リポジトリは loader ごとにサブディレクトリへ実装を分ける構成（LotTweaks と同じ流儀）:
-- `fabric/` - Fabric (Minecraft 1.21.8)
-- `neoforge/` - NeoForge (Minecraft 1.21.8, NeoForge 21.8.x)
+Fabric と NeoForge の 2 つの mod loader に対応している。リポジトリは共通層と loader 層に分かれている:
+- `common/` - 共通層。単体の Gradle プロジェクトではなく、各 loader の `build.gradle` が `srcDir` で参照してコンパイルする
+- `fabric/` - Fabric 層 (Minecraft 1.21.8)
+- `neoforge/` - NeoForge 層 (Minecraft 1.21.8, NeoForge 21.8.x)
 
 移植元は LotTweaks (`../1.21.8_fabric`)。LotTweaks は Creative 専用・server 連携ありだが、PocketPalette は Palette 機能のみを抜き出し、サーバーへのインストール不要。
 
-## 両 loader の同期
+## 層の分け方
 
-共通ソースセットは無く、共通部分も `fabric/` と `neoforge/` にそれぞれコピーを持っている。**機能追加・修正は原則として両方に同じ変更を入れ、両方でビルドとテストを通す**。片方だけ変えても、もう片方のテストでは検出できない。
+- **依存は loader 層 → 共通層の一方向**。`common/` からは Minecraft（vanilla）の API と Brigadier・GLFW などだけを使い、loader の API や loader 層のクラスを参照しない。NeoForge が vanilla クラスに追加したメソッド（`getSlotUnderMouse()` など）も loader の API に含む。
+- **loader 層の仕事は変換だけ**。loader のイベントやフックを受けて `PocketPaletteClient` を呼ぶ。loader ごとの差は loader 層で吸収し、必要な値（hovered slot など）は引数で渡す。共通層に loader 向けのインターフェースは置かない。
+- **loader 層のクラスは `...pocketpalette.fabric` / `...pocketpalette.neoforge` パッケージに置く**。それ以外のパッケージは `common/` だけが持つ。
 
-何が共通で何が loader 独自かは [Architecture](#architecture) を参照。
+共通層の変更は両方の loader に効くので、**どの変更でも両方でビルドとテストを通す**。loader 層の API を共通層から誤って使うと、もう片方のコンパイルで検出される。
+
+何がどの層にあるかは [Architecture](#architecture) を参照。
 
 # Development Environment
 
@@ -37,10 +42,12 @@ git status
 
 どちらも Java 21（Minecraft 1.21.8 の要件）、official Mojang mappings を使用。
 
-Default config（`assets/pocketpalette/default-item-groups.json`）は手編集禁止。
-`src/test/.../palette/DefaultItemGroupsCatalog.java` が正で、上記タスクで JSON に焼き込む
+Default config（`common/src/main/resources/assets/pocketpalette/default-item-groups.json`）は手編集禁止。
+`common/src/test/.../palette/DefaultItemGroupsCatalog.java` が正で、上記タスクで JSON に焼き込む
 （設計: `docs/default-item-groups-catalog.md`）。カタログと JSON がズレると
-`DefaultItemGroupsCatalogTest` が落ちる。カタログも loader ごとにコピーがあるので、両方を更新して両方で再生成する。
+`DefaultItemGroupsCatalogTest` が落ちる。カタログも JSON も 1 つなので、再生成はどちらかの loader で 1 回実行すればよい。
+
+`DefaultItemGroupsGenerator` は JUnit テストとして動き（素の `main` では NeoForge の `Bootstrap` が FML 未初期化で落ちるため）、`generateDefaultItemGroups` が target パスをシステムプロパティで渡す。通常の `test` では skip されるので、skipped 1 件は正常。
 
 # Minecraft バージョンアップ手順
 
@@ -49,7 +56,7 @@ Default config（`assets/pocketpalette/default-item-groups.json`）は手編集�
    - Fabric: 公式の開発ページ・API・Maven メタデータを確認し、`fabric/gradle.properties`、`fabric.mod.json` などを更新する。必要に応じて Loom / Gradle / Java も更新する。
    - NeoForge: 公式の Maven メタデータ・MDK を確認し、`neoforge/gradle.properties`（`neo_version`、`minecraft_version_range`、`archives_base_name` など）を更新する。必要に応じて ModDevGradle / Gradle / Java も更新する。
 3. `fabric` と `neoforge` でそれぞれ `.\gradlew build` を実行し、API・Mixin・イベントなどの変更に追従してビルドを通す。
-4. 新ブロック・アイテムの追加候補とグループ分けをユーザーに確認する。合意後に両方の `DefaultItemGroupsCatalog.java` を更新し、それぞれ `.\gradlew generateDefaultItemGroups` で default config を再生成する。
+4. 新ブロック・アイテムの追加候補とグループ分けをユーザーに確認する。合意後に `common/` の `DefaultItemGroupsCatalog.java` を更新し、`.\gradlew generateDefaultItemGroups` で default config を再生成する。
 5. 両方で `.\gradlew test` と `.\gradlew build` を通す。
 6. 両方のビルド済み JAR を案内してユーザーに動作確認を依頼し、問題がなければ完了とする。
 
@@ -59,25 +66,25 @@ Default config（`assets/pocketpalette/default-item-groups.json`）は手編集�
 ./gradlew test   # fabric/ と neoforge/ のそれぞれで実行
 ```
 
-Tests use JUnit Jupiter with Minecraft Bootstrap for game environment initialization (`MinecraftBootstrapExtension`). テストコードは loader 間で共通（`DefaultItemGroupsGenerator` を除く）。loader ごとのテスト環境の違いは各 loader の節を参照。
+Tests use JUnit Jupiter with Minecraft Bootstrap for game environment initialization (`MinecraftBootstrapExtension`). テストコードは `common/src/test/` にあり、各 loader のテスト環境で実行される。loader ごとのテスト環境の違いは各 loader の節を参照。
 
 # Architecture
 
-## 共通部分
+## 共通層（`common/`）
 
-ソースの置き場所だけが loader で異なる（Fabric は `src/client/`、NeoForge は `src/main/`。詳細は各 loader の節）。
+`src/main/java`、`src/main/resources`、`src/test/java` を持つ。
 
 `com.github.aruma256.pocketpalette`:
 - `PocketPalette.java` - MODID / LOGGER / CONFIG constants
 
-`com.github.aruma256.pocketpalette.client`（下記の **[loader 依存]** は loader の API を直接使うので中身が異なる。それ以外は Fabric の `@Environment` を除いて loader 間で同じ内容を保つ）:
-- `PocketPaletteClient.java` **[loader 依存]** - Client entry point, keybinding registration, config reload on world join, scroll/render の配線
-- `PocketPaletteCommand.java` **[loader 依存]** - `/pocketpalette reload`
+`com.github.aruma256.pocketpalette.client`:
+- `PocketPaletteClient.java` - loader 層からの入口。キー、tick、スクロール、描画、コンテナ画面の入力、ワールド参加時の config 再読み込みを受ける
+- `PocketPaletteCommand.java` - `/pocketpalette reload`。loader ごとに異なる command source に合わせて generic にしてある
 - `gui/` - In-game palette editor
-  - `PaletteEditorOpener.java` **[loader 依存]** - Opens the editor when the palette key is pressed while hovering an item in a container screen (REI/JEI-style hover + key)
+  - `PaletteEditorOpener.java` - Opens the editor when the palette key is pressed while hovering an item in a container screen (REI/JEI-style hover + key)
   - `PaletteEditScreen.java` - Editor screen: cycle list (reorder ↑↓ / delete ✕, group 1/2 toggle) on top, player inventory below (click = append base item). Auto-saves on close; cycles with <2 items are discarded
 - `keybinding/` - Key handling
-  - `KeyBase.java` **[loader 依存]** - Base class with press/release/double-tap detection
+  - `KeyBase.java` - Base class with press/release/double-tap detection
   - `PaletteKey.java` - R key: hold + scroll to cycle items; candidates are filtered to items present in the inventory
   - `PaletteSession.java` - Candidate ring and inventory tracking for one held-key session; inventory reads and swaps are supplied by the caller
   - `InventorySwapper.java` - **Survival-mode core**: finds a matching inventory slot and swaps it with the selected hotbar slot via `gameMode.handleInventoryMouseClick(..., ClickType.SWAP, ...)`
@@ -90,7 +97,7 @@ Tests use JUnit Jupiter with Minecraft Bootstrap for game environment initializa
   - `ItemValidation.java` - Item/stack validity checks
 - `render/` - `ItemStackRenderer` (circular candidate display above hotbar)
 
-Resources（`assets/pocketpalette/` の `default-item-groups.json`、`lang/`、`icon.png`）も共通。
+Resources（`assets/pocketpalette/` の `default-item-groups.json`、`lang/`、`icon.png`）も `common/` にある。
 
 ### Key Design Decisions
 - **Survival swap instead of Creative overwrite**: LotTweaks uses `handleCreativeModeItemAdd` (Creative only). PocketPalette sends a SWAP container click on the player's `InventoryMenu`, which the server executes — works in Survival and Creative, no server-side mod needed. Swaps are skipped while another container is open (`player.containerMenu != player.inventoryMenu`).
@@ -111,27 +118,25 @@ LotTweaks は Fabric 実装なので、Fabric API の呼び出しは loader ご�
 - Fabric: `KeyMappingHelper` → `KeyBindingHelper.registerKeyBinding`、`ClientCommands.literal` → `ClientCommandManager.literal`
 - NeoForge: 次節のイベントに置き換える
 
-## Fabric 独自の部分
+## Fabric 層（`fabric/`）
 
-- **Source structure**: split environment。`src/main/` に `PocketPalette.java` と `fabric.mod.json`、`src/client/` にそれ以外の mod ロジックを置く。
-- **Client-only**: `fabric.mod.json` の `environment: "client"`。`PocketPaletteClient` は `ClientModInitializer`。client 側のクラスには `@Environment(EnvType.CLIENT)` を付ける。
-- **Mixin**（`client/mixin/`）:
+- **Source structure**: split environment。`common/` は Minecraft のクライアントクラスを使うので `client` ソースセットに `srcDir` で取り込む。`src/main/` は `fabric.mod.json` だけで、クラスを持たない（このため dev 起動時に `build/classes/java/main` が無いという Loader の警告が出るが、実害はない）。`src/client/` は下記の loader 層のクラスと mixin 設定を持つ。
+- **Client-only**: `fabric.mod.json` の `environment: "client"`。エントリは `fabric/PocketPaletteFabricClient`（`ClientModInitializer`）。Fabric 層のクラスには `@Environment(EnvType.CLIENT)` を付ける。共通層には付けない。
+- **Mixin**（`fabric/mixin/`）:
   - `MouseScrollRedirector` - スクロール横取り
   - `HotbarRendererHook` - 候補リング描画のフック
   - `AbstractContainerScreenAccessor` - エディタ起動用に `hoveredSlot` を公開
   - `ContainerKeyHook` - `AbstractContainerScreen.keyPressed` 内の `super.keyPressed` を包み、未処理のキーでエディタを開く。vanilla は 1.21.10 まで未処理でも `true` を返し、Fabric API の `afterKeyPress` も無条件に発火するので、イベントでは「画面が処理しなかったキー」を判定できない
 - **Fabric API**: `ClientTickEvents`、`KeyBindingHelper`、`ClientPlayConnectionEvents.JOIN`、`ClientCommandRegistrationCallback`、`ScreenEvents` / `ScreenMouseEvents`。
 - **Test**: 上記の JUnit に加え、Client game test（`src/gametest/` の `PaletteClientGameTest`、`./gradlew runClientGameTest`）がある。
-- **Default config**: `DefaultItemGroupsGenerator` は `main` を持ち、`JavaExec` で実行する。生成先は `src/client/resources/assets/pocketpalette/default-item-groups.json`。
 
-## NeoForge 独自の部分
+## NeoForge 層（`neoforge/`）
 
-- **Source structure**: `src/main/` のみ（split なし）。`neoforge.mods.toml` は `src/main/templates/META-INF/` に置き、`generateModMetadata` で展開する。Gradle plugin は ModDevGradle（`net.neoforged.moddev`）で、Java 21 は Gradle toolchain で解決される。
-- **Client-only**: `PocketPaletteClient` を `@Mod(dist = Dist.CLIENT)` のエントリにする。
+- **Source structure**: `src/main/` のみ（split なし）。`common/` は `main` ソースセットに `srcDir` で取り込む。`neoforge.mods.toml` は `src/main/templates/META-INF/` に置き、`generateModMetadata` で展開する。Gradle plugin は ModDevGradle（`net.neoforged.moddev`）で、Java 21 は Gradle toolchain で解決される。
+- **Client-only**: `neoforge/PocketPaletteNeoForgeClient` を `@Mod(dist = Dist.CLIENT)` のエントリにする。
 - **Mixin は不使用**。NeoForge のイベントと GUI レイヤーで実現している:
   - `InputEvent.MouseScrollingEvent` - スクロール横取り。Spectator では何もしない。
   - `RegisterGuiLayersEvent.registerAbove(VanillaGuiLayers.HOTBAR, ...)` - 候補リング描画。追加レイヤーには vanilla の表示条件が付かないので、`options.hideGui` を自前で確認する。
   - `ScreenEvent.KeyPressed.Post` / `MouseButtonPressed.Pre` + `getSlotUnderMouse()` - エディタ起動。
   - `ClientTickEvent.Post`、`RegisterKeyMappingsEvent`、`RegisterClientCommandsEvent`、`ClientPlayerNetworkEvent.LoggingIn`。
-- **Test**: ModDevGradle の `unitTest` により NeoForge 環境で実行する。Client game test は無い。
-- **Default config**: 素の `main` では `Bootstrap` が FML 未初期化で落ちるため、`DefaultItemGroupsGenerator` は JUnit テストとして動く。`generateDefaultItemGroups` は `test` タスクの設定を引き継いだ `Test` タスクで、target パスをシステムプロパティで渡す。通常の `test` では skip されるので、skipped 1 件は正常。生成先は `src/main/resources/assets/pocketpalette/default-item-groups.json`。
+- **Test**: ModDevGradle の `unitTest` により NeoForge 環境で実行する。Client game test は無い。`generateDefaultItemGroups` は `test` タスクの設定を引き継いだ `Test` タスクにする。

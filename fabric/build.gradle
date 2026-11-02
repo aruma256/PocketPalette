@@ -53,13 +53,29 @@ fabricApi {
 	}
 }
 
+// 共通ソース。Minecraft のクライアントクラスを使うので client ソースセットに入れる
+sourceSets {
+	client {
+		java.srcDir '../common/src/main/java'
+		resources.srcDir '../common/src/main/resources'
+	}
+	test {
+		java.srcDir '../common/src/test/java'
+	}
+}
+
 // default-item-groups.json を DefaultItemGroupsCatalog から再生成する
-tasks.register('generateDefaultItemGroups', JavaExec) {
+tasks.register('generateDefaultItemGroups', Test) {
 	group = 'pocketpalette'
-	description = 'Regenerate src/client/resources/assets/pocketpalette/default-item-groups.json from DefaultItemGroupsCatalog'
+	description = 'Regenerate common/src/main/resources/assets/pocketpalette/default-item-groups.json from DefaultItemGroupsCatalog'
+	testClassesDirs = sourceSets.test.output.classesDirs
 	classpath = sourceSets.test.runtimeClasspath
-	mainClass = 'com.github.aruma256.pocketpalette.client.palette.DefaultItemGroupsGenerator'
-	args = ["${projectDir}/src/client/resources/assets/pocketpalette/default-item-groups.json"]
+	systemProperty 'pocketpalette.defaultItemGroupsTarget', file('../common/src/main/resources/assets/pocketpalette/default-item-groups.json').path
+	useJUnitPlatform()
+	filter {
+		includeTestsMatching 'com.github.aruma256.pocketpalette.client.palette.DefaultItemGroupsGenerator'
+	}
+	outputs.upToDateWhen { false }
 }
 
 test {

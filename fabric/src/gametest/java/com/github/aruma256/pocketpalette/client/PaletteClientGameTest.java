@@ -7,10 +7,10 @@ import org.lwjgl.glfw.GLFW;
 
 import com.github.aruma256.pocketpalette.PocketPalette;
 import com.github.aruma256.pocketpalette.client.gui.PaletteEditScreen;
-import com.github.aruma256.pocketpalette.client.mixin.AbstractContainerScreenAccessor;
 import com.github.aruma256.pocketpalette.client.palette.ItemPalette;
 import com.github.aruma256.pocketpalette.client.palette.ItemState;
 import com.github.aruma256.pocketpalette.client.palette.PaletteConfigManager;
+import com.github.aruma256.pocketpalette.fabric.mixin.AbstractContainerScreenAccessor;
 import com.mojang.blaze3d.platform.InputConstants;
 
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
