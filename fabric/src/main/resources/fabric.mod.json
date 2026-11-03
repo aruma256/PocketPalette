@@ -3,9 +3,10 @@
 	"id": "pocketpalette",
 	"version": "${version}",
 	"name": "PocketPalette",
-	"description": "Cycle through related items in your hotbar, even in Survival mode.",
+	"description": "Switch between related items without opening your inventory.",
 	"authors": [
-		"Aruma256"
+		"aruma256",
+		"LOTqwerty"
 	],
 	"contact": {
 		"sources": "https://github.com/aruma256/PocketPalette"
@@ -15,7 +16,7 @@
 	"environment": "client",
 	"entrypoints": {
 		"client": [
-			"com.github.aruma256.pocketpalette.client.PocketPaletteClient"
+			"com.github.aruma256.pocketpalette.fabric.PocketPaletteFabricClient"
 		]
 	},
 	"mixins": [
@@ -25,7 +26,7 @@
 		}
 	],
 	"depends": {
-		"fabricloader": ">=0.19.5",
+		"fabricloader": ">=0.20.1",
 		"minecraft": "26.3",
 		"java": ">=25",
 		"fabric-api": "*"

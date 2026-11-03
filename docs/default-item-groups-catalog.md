@@ -2,7 +2,7 @@
 
 PocketPalette が同梱する default config の全サイクルと、収録・並び順の設計方針。
 
-サイクルの定義元は [DefaultItemGroupsCatalog.java](../fabric/src/test/java/com/github/aruma256/pocketpalette/client/palette/DefaultItemGroupsCatalog.java)。表の番号（A1〜E4）は実装のコメントと対応する。生成済み JSON は手編集せず、定義元を変更して再生成する。
+サイクルの定義元は [DefaultItemGroupsCatalog.java](../common/src/test/java/com/github/aruma256/pocketpalette/client/palette/DefaultItemGroupsCatalog.java)。表の番号（A1〜E4）は実装のコメントと対応する。生成済み JSON は手編集せず、定義元を変更して再生成する。
 JSON の再生成: `cd fabric && ./gradlew generateDefaultItemGroups`
 同期・網羅性は `DefaultItemGroupsCatalogTest` が検証する（出荷 JSON とカタログの一致、レジストリとの suffix 網羅チェック）。
 

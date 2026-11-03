@@ -1,5 +1,7 @@
 # PocketPalette
 
+**[Download on CurseForge](https://www.curseforge.com/minecraft/mc-mods/pocketpalette)**
+
 Switch between related items without opening your inventory.
 
 Hold the Palette key (default: <kbd>R</kbd>) and scroll to swap your selected hotbar item with another item from the same group. Only items you already have in your inventory are available.
