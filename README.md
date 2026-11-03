@@ -1,5 +1,7 @@
 # PocketPalette
 
+**[Download on CurseForge](https://www.curseforge.com/minecraft/mc-mods/pocketpalette)**
+
 Turn one hotbar slot into a palette of related items for building, farming, or exploring. Hold the Palette key (default: <kbd>R</kbd>) and scroll to swap the selected item with another item from its group. Only items you carry appear in the palette. PocketPalette works in Survival and Creative.
 
 ![PocketPalette demo: hold R and scroll to cycle through tools and colored wool](docs/media/palette-demo.webp)
