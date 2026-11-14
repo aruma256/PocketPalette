@@ -9,7 +9,8 @@
 		"LOTqwerty"
 	],
 	"contact": {
-		"sources": "https://github.com/aruma256/PocketPalette"
+		"sources": "https://github.com/aruma256/PocketPalette",
+		"issues": "https://github.com/aruma256/PocketPalette/issues"
 	},
 	"license": "GPL-3.0-or-later",
 	"icon": "assets/pocketpalette/icon.png",

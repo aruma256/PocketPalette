@@ -81,8 +81,12 @@ public final class PocketPaletteClient {
 	}
 
 	public static void showConfigError(String translationKey) {
-		Minecraft.getInstance().gui.chatListener().handleSystemMessage(
-				Component.translatable(translationKey).withStyle(ChatFormatting.RED), false);
+		showMessage(Component.translatable(translationKey).withStyle(ChatFormatting.RED));
+	}
+
+	/** Shows a client-only message in chat. */
+	public static void showMessage(Component message) {
+		Minecraft.getInstance().gui.chatListener().handleSystemMessage(message, false);
 	}
 
 }

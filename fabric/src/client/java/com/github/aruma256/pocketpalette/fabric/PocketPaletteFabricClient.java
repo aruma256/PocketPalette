@@ -5,8 +5,6 @@ import com.github.aruma256.pocketpalette.client.PocketPaletteCommand;
 import com.github.aruma256.pocketpalette.fabric.mixin.AbstractContainerScreenAccessor;
 
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -17,7 +15,6 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 
 /** Fabric entry point: connects Fabric API events to {@link PocketPaletteClient}. Mixins cover the rest. */
-@Environment(EnvType.CLIENT)
 public class PocketPaletteFabricClient implements ClientModInitializer {
 
 	@Override

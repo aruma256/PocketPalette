@@ -5,7 +5,7 @@
   "environment": "client",
   "entrypoints": {
     "fabric-client-gametest": [
-      "com.github.aruma256.pocketpalette.client.PaletteClientGameTest"
+      "com.github.aruma256.pocketpalette.fabric.test.PaletteClientGameTest"
     ]
   }
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.github.aruma256.pocketpalette.MinecraftBootstrapExtension;
+import com.mojang.blaze3d.platform.InputConstants;
 
 @ExtendWith(MinecraftBootstrapExtension.class)
 public class KeyBaseTest {
@@ -23,7 +24,7 @@ public class KeyBaseTest {
         int doubleTapTickAtPressStart = -1;
 
         TestKey() {
-            super("key.pocketpalette.test" + (keyCounter++), 82, Category.MISC);
+            super("key.pocketpalette.test" + (keyCounter++), InputConstants.KEY_R, Category.MISC);
         }
 
         @Override

@@ -2,8 +2,6 @@ package com.github.aruma256.pocketpalette.client.render;
 
 import java.util.Collection;
 
-import com.github.aruma256.pocketpalette.PocketPalette;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
@@ -16,13 +14,11 @@ public final class ItemStackRenderer {
 	private static final double CIRCLE_BASE_RADIUS = 20.0;
 	private static final double CIRCLE_RADIUS_PER_ITEM = 1.2;
 
+	private ItemStackRenderer() {}
+
 	public static void renderItemStacks(GuiGraphicsExtractor guiGraphics, Collection<ItemStack> stacks, int x, int y, int t, float pt, int lt, byte direction) {
 		if (stacks.isEmpty()) {
 			return;
-		}
-		if (PocketPalette.CONFIG.DISABLE_ANIMATIONS) {
-			t = Integer.MAX_VALUE;
-			pt = 0;
 		}
 		double max_r = CIRCLE_BASE_RADIUS + stacks.size() * CIRCLE_RADIUS_PER_ITEM;
 		double r = max_r * Math.tanh((t + pt) / CIRCLE_EXPAND_SPEED);

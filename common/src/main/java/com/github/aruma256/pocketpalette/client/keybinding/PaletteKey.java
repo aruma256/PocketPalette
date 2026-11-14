@@ -2,7 +2,6 @@ package com.github.aruma256.pocketpalette.client.keybinding;
 
 import java.util.List;
 
-import com.github.aruma256.pocketpalette.PocketPalette;
 import com.github.aruma256.pocketpalette.client.compat.LotTweaksCompat;
 import com.github.aruma256.pocketpalette.client.palette.ItemPalette;
 import com.github.aruma256.pocketpalette.client.palette.ItemState;
@@ -50,13 +49,7 @@ public class PaletteKey extends KeyBase {
 
 	private int getGroupIndex() {
 		int maxGroups = ItemPalette.getGroupCount();
-		if (maxGroups == 0) return 0;
-
-		if (PocketPalette.CONFIG.SNEAK_TO_SWITCH_GROUP) {
-			return Minecraft.getInstance().player.isShiftKeyDown() ? 1 : 0;
-		} else {
-			return this.phase % maxGroups;
-		}
+		return maxGroups == 0 ? 0 : this.phase % maxGroups;
 	}
 
 	@Override

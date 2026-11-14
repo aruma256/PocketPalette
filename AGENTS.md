@@ -78,7 +78,7 @@ Tests use JUnit Jupiter with Minecraft Bootstrap for game environment initializa
 `src/main/java`、`src/main/resources`、`src/test/java` を持つ。
 
 `com.github.aruma256.pocketpalette`:
-- `PocketPalette.java` - MODID / LOGGER / CONFIG constants
+- `PocketPalette.java` - MODID / LOGGER constants
 
 `com.github.aruma256.pocketpalette.client`:
 - `PocketPaletteClient.java` - loader 層からの入口。キー、tick、スクロール、描画、コンテナ画面の入力、ワールド参加時の config 読み込みを受ける
@@ -120,14 +120,14 @@ LotTweaks は Fabric 実装なので、NeoForge では Fabric API の呼び出�
 ## Fabric 層（`fabric/`）
 
 - **Source structure**: split environment。`common/` は Minecraft のクライアントクラスを使うので `client` ソースセットに `srcDir` で取り込む。`src/main/` は `fabric.mod.json` だけで、クラスを持たない（このため dev 起動時に `build/classes/java/main` が無いという Loader の警告が出るが、実害はない）。`src/client/` は下記の loader 層のクラスと mixin 設定を持つ。
-- **Client-only**: `fabric.mod.json` の `environment: "client"`。エントリは `fabric/PocketPaletteFabricClient`（`ClientModInitializer`）。Fabric 層のクラスには `@Environment(EnvType.CLIENT)` を付ける。共通層には付けない。
+- **Client-only**: `fabric.mod.json` の `environment: "client"`。エントリは `fabric/PocketPaletteFabricClient`（`ClientModInitializer`）。クライアント専用であることは `client` ソースセットと `environment` で決まるので、`@Environment(EnvType.CLIENT)` は付けない。
 - **Mixin**（`fabric/mixin/`）:
   - `MouseScrollRedirector` - スクロール横取り
   - `HotbarRendererHook` - 候補リング描画のフック
   - `AbstractContainerScreenAccessor` - エディタ起動用に `hoveredSlot` を公開
   - `ContainerKeyHook` - `AbstractContainerScreen.keyPressed` 内の `super.keyPressed` を包み、未処理のキーでエディタを開く。vanilla は 1.21.10 まで未処理でも `true` を返し、Fabric API の `afterKeyPress` も無条件に発火するので、イベントでは「画面が処理しなかったキー」を判定できない
 - **Fabric API**: `ClientTickEvents`、`KeyMappingHelper`、`ClientPlayConnectionEvents.JOIN`、`ClientCommandRegistrationCallback`、`ScreenEvents` / `ScreenMouseEvents`。
-- **Test**: 上記の JUnit に加え、Client game test（`src/gametest/` の `PaletteClientGameTest`、`./gradlew runClientGameTest`）がある。
+- **Test**: 上記の JUnit に加え、Client game test（`src/gametest/` の `fabric/test/PaletteClientGameTest`、`./gradlew runClientGameTest`）がある。別 mod（`pocketpalette-test`）として読み込む。
 
 ## NeoForge 層（`neoforge/`）
 

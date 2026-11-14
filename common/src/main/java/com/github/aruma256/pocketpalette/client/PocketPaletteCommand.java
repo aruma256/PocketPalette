@@ -6,21 +6,11 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
 public final class PocketPaletteCommand {
 
 	private PocketPaletteCommand() {}
-
-	private static void displayMessage(Component textComponent) {
-		Minecraft.getInstance().gui.chatListener().handleSystemMessage(textComponent, false);
-	}
-
-	private static void displayError(String message) {
-		displayMessage(Component.literal(ChatFormatting.RED + "PocketPalette: " + message));
-	}
 
 	/** Generic because each loader has its own client command source type. */
 	public static <S> void register(CommandDispatcher<S> dispatcher) {
@@ -34,10 +24,9 @@ public final class PocketPaletteCommand {
 
 	private static void executeReload() {
 		if (PaletteConfigManager.loadAllFromFile()) {
-			displayMessage(Component.literal("PocketPalette: reload succeeded!"));
+			PocketPaletteClient.showMessage(Component.translatable("pocketpalette.command.reload_succeeded"));
 		} else {
-			displayError("failed to reload config file");
+			PocketPaletteClient.showConfigLoadStatus();
 		}
-		PocketPaletteClient.showConfigLoadStatus();
 	}
 }

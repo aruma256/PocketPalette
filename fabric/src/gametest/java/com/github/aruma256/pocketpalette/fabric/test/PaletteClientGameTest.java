@@ -1,5 +1,6 @@
-package com.github.aruma256.pocketpalette.client;
+package com.github.aruma256.pocketpalette.fabric.test;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -50,7 +51,7 @@ public class PaletteClientGameTest implements FabricClientGameTest {
                 player.inventoryMenu.broadcastChanges();
             });
             context.waitFor(client -> client.gameMode.getPlayerMode() == GameType.SURVIVAL
-                    && matches(client.player.getInventory(), stone, andesite));
+                    && matchesSlots(client.player.getInventory(), Map.of(0, stone, 9, andesite)));
             context.runOnClient(client -> {
                 client.player.getInventory().setSelectedSlot(0);
                 ItemPalette.loadGroups(List.of(List.of(List.of(
@@ -61,10 +62,10 @@ public class PaletteClientGameTest implements FabricClientGameTest {
             try {
                 context.waitTicks(2);
                 context.getInput().scroll(1);
-                awaitInventory(context, world, andesite, stone);
+                awaitSlots(context, world, 0, Map.of(0, andesite, 9, stone));
                 context.takeScreenshot("palette-after-swap");
                 context.getInput().scroll(-1);
-                awaitInventory(context, world, stone, andesite);
+                awaitSlots(context, world, 0, Map.of(0, stone, 9, andesite));
             } finally {
                 context.getInput().releaseKey(InputConstants.KEY_R);
                 context.waitTick();
@@ -87,7 +88,7 @@ public class PaletteClientGameTest implements FabricClientGameTest {
                 throw new AssertionError("Editor test config failed to load");
             }
         });
-        KeyMapping paletteKey = context.computeOnClient(client -> java.util.Arrays.stream(client.options.keyMappings)
+        KeyMapping paletteKey = context.computeOnClient(client -> Arrays.stream(client.options.keyMappings)
                 .filter(key -> key.getName().equals("key.pocketpalette.palette")).findFirst().orElseThrow());
         InputConstants.Key originalKey = context.computeOnClient(client -> KeyMappingHelper.getBoundKeyOf(paletteKey));
         try {
@@ -353,6 +354,7 @@ public class PaletteClientGameTest implements FabricClientGameTest {
             int selectedSlot, Map<Integer, ItemStack> stacks) {
         context.waitFor(client -> client.player.getInventory().getSelectedSlot() == selectedSlot
                 && matchesSlots(client.player.getInventory(), stacks));
+        // Check authoritative state too: client prediction alone must not pass this test.
         for (int tick = 0; tick < ClientGameTestContext.DEFAULT_TIMEOUT; tick++) {
             if (world.getServer().computeOnServer(server -> {
                 var inventory = server.getPlayerList().getPlayers().getFirst().getInventory();
@@ -366,33 +368,6 @@ public class PaletteClientGameTest implements FabricClientGameTest {
     private static boolean matchesSlots(Inventory inventory, Map<Integer, ItemStack> stacks) {
         for (int slot = 0; slot < Inventory.INVENTORY_SIZE; slot++) {
             if (!ItemStack.matches(inventory.getItem(slot), stacks.getOrDefault(slot, ItemStack.EMPTY))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static void awaitInventory(ClientGameTestContext context, TestSingleplayerContext world,
-            ItemStack hand, ItemStack source) {
-        context.waitFor(client -> matches(client.player.getInventory(), hand, source)
-                && client.player.getInventory().getSelectedSlot() == 0);
-        // Check authoritative state too: client prediction alone must not pass this test.
-        for (int tick = 0; tick < ClientGameTestContext.DEFAULT_TIMEOUT; tick++) {
-            if (world.getServer().computeOnServer(server -> {
-                var inventory = server.getPlayerList().getPlayers().getFirst().getInventory();
-                return matches(inventory, hand, source) && inventory.getSelectedSlot() == 0;
-            })) {
-                return;
-            }
-            context.waitTick();
-        }
-        throw new AssertionError("Server inventory did not confirm the palette swap");
-    }
-
-    private static boolean matches(Inventory inventory, ItemStack hand, ItemStack source) {
-        for (int slot = 0; slot < Inventory.INVENTORY_SIZE; slot++) {
-            ItemStack expected = slot == 0 ? hand : slot == 9 ? source : ItemStack.EMPTY;
-            if (!ItemStack.matches(inventory.getItem(slot), expected)) {
                 return false;
             }
         }

@@ -2,6 +2,7 @@ package com.github.aruma256.pocketpalette.client.keybinding;
 
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +30,12 @@ public class InventorySwapperTest {
         for (int i = 0; i < slots.length; i++) {
             slots[i] = ItemStack.EMPTY;
         }
+    }
+
+    @AfterEach
+    public void resetPalette() {
+        // One test loads groups into the static palette; do not leak them into other tests.
+        ItemPalette.clear();
     }
 
     private List<Integer> findAll(int selectedSlot, ItemStack target) {

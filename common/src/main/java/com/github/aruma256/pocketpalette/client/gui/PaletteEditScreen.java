@@ -291,9 +291,8 @@ public class PaletteEditScreen extends Screen {
 			PocketPaletteClient.showConfigError("pocketpalette.config.save_failed");
 		}
 		if (discarded) {
-			this.minecraft.gui.chatListener().handleSystemMessage(
-					Component.translatable("pocketpalette.editor.cycle_removed").withStyle(ChatFormatting.YELLOW),
-					false);
+			PocketPaletteClient.showMessage(
+					Component.translatable("pocketpalette.editor.cycle_removed").withStyle(ChatFormatting.YELLOW));
 		}
 		super.onClose();
 	}
